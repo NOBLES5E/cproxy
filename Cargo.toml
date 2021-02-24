@@ -1,6 +1,6 @@
 [package]
 name = "cproxy"
-version = "2.0.2"
+version = "2.1.0"
 authors = ["Xiangru Lian <admin@mail.xrlian.com>"]
 description = "Transparent proxy built on cgroup net_cls."
 homepage = "https://github.com/NOBLES5E/cproxy"

@@ -32,7 +32,7 @@ cproxy --port <destination-local-port> --pid <existing-process-pid>
 
 ## Example setup
 
-This section provides an example setup with DNS and TCP redirection. With the following V2Ray config, you can proxy your program's DNS requests with 1.1.1.1 and the DNS server, and proxy all TCP connections.
+This section provides an example setup with DNS and TCP redirection. With the following V2Ray config, you can proxy your program's DNS requests with 1.1.1.1 as the DNS server, and proxy all TCP connections.
 
 V2Ray config:
 

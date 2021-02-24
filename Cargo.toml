@@ -1,6 +1,6 @@
 [package]
 name = "cproxy"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Xiangru Lian <admin@mail.xrlian.com>"]
 description = "Transparent proxy built on cgroup net_cls."
 license = "AGPL-3.0-or-later"

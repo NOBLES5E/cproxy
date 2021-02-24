@@ -1,5 +1,4 @@
 use structopt::StructOpt;
-use human_panic::setup_panic;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
@@ -89,7 +88,6 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> anyhow::Result<()> {
 }
 
 fn main() -> anyhow::Result<()> {
-    setup_panic!();
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_env("LOG_LEVEL"))
         .init();

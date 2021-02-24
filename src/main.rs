@@ -21,21 +21,61 @@ enum ChildCommand {
     Command(Vec<String>)
 }
 
-struct RedirectGuard {
-    class_id: u32,
-    port: u32,
-    pid: u32,
-    output_chain_name: String,
-    cgroup_path: String,
+struct CGroupGuard {
+    pub pid: u32,
+    pub cgroup_path: String,
+    pub class_id: u32,
+    pub remove_children: bool,
 }
 
-impl RedirectGuard {
-    fn new(class_id: u32, port: u32, pid: u32, output_chain_name: &str, cgroup_path: &str) -> anyhow::Result<Self> {
+impl CGroupGuard {
+    fn new(pid: u32, cgroup_path: &str, remove_children: bool, class_id: u32) -> anyhow::Result<Self> {
         (cmd_lib::run_cmd! {
         sudo mkdir -p /sys/fs/cgroup/net_cls/${cgroup_path};
         echo ${class_id} | sudo tee /sys/fs/cgroup/net_cls/${cgroup_path}/net_cls.classid > /dev/null;
         echo ${pid} | sudo tee /sys/fs/cgroup/net_cls/${cgroup_path}/cgroup.procs > /dev/null;
+        })?;
 
+        Ok(Self {
+            pid,
+            cgroup_path: cgroup_path.to_owned(),
+            class_id,
+            remove_children,
+        })
+    }
+}
+
+impl Drop for CGroupGuard {
+    fn drop(&mut self) {
+        let cgroup_path = &self.cgroup_path;
+        let pid = self.pid;
+        match self.remove_children {
+            true => {
+                (cmd_lib::run_cmd! {
+                 cat /sys/fs/cgroup/net_cls/${cgroup_path}/cgroup.procs | xargs -I "{}" bash -c "echo {} | sudo tee /sys/fs/cgroup/net_cls/cgroup.procs > /dev/null";
+                 sudo rmdir /sys/fs/cgroup/net_cls/${cgroup_path};
+                 }).expect("drop cgroup failed");
+            }
+            false => {
+                (cmd_lib::run_cmd! {
+                 echo ${pid} | sudo tee /sys/fs/cgroup/net_cls/cgroup.procs > /dev/null;
+                 sudo rmdir /sys/fs/cgroup/net_cls/${cgroup_path};
+                 }).expect("drop cgroup failed");
+            }
+        }
+    }
+}
+
+struct RedirectGuard {
+    port: u32,
+    output_chain_name: String,
+    cgroup_guard: CGroupGuard,
+}
+
+impl RedirectGuard {
+    fn new(port: u32, output_chain_name: &str, cgroup_guard: CGroupGuard) -> anyhow::Result<Self> {
+        let class_id = cgroup_guard.class_id;
+        (cmd_lib::run_cmd! {
         sudo iptables -t nat -N ${output_chain_name};
         sudo iptables -t nat -A OUTPUT -j ${output_chain_name};
         sudo iptables -t nat -A ${output_chain_name} -p tcp -m cgroup --cgroup ${class_id} -j REDIRECT --to-ports ${port};
@@ -43,11 +83,9 @@ impl RedirectGuard {
         })?;
 
         Ok(Self {
-            class_id,
             port,
-            pid,
             output_chain_name: output_chain_name.to_owned(),
-            cgroup_path: cgroup_path.to_owned(),
+            cgroup_guard,
         })
     }
 }
@@ -55,16 +93,11 @@ impl RedirectGuard {
 impl Drop for RedirectGuard {
     fn drop(&mut self) {
         let output_chain_name = &self.output_chain_name;
-        let pid = self.pid;
-        let cgroup_path = &self.cgroup_path;
 
         (cmd_lib::run_cmd! {
-        sudo iptables -t nat -D OUTPUT -j ${output_chain_name};
-        sudo iptables -t nat -F ${output_chain_name};
-        sudo iptables -t nat -X ${output_chain_name};
-
-        echo ${pid} | sudo tee /sys/fs/cgroup/net_cls/cgroup.procs > /dev/null;
-        sudo rmdir /sys/fs/cgroup/net_cls/${cgroup_path};
+          sudo iptables -t nat -D OUTPUT -j ${output_chain_name};
+          sudo iptables -t nat -F ${output_chain_name};
+          sudo iptables -t nat -X ${output_chain_name};
         }).expect("drop iptables and cgroup failed");
     }
 }
@@ -79,7 +112,8 @@ fn proxy_new_command(args: &Cli) -> anyhow::Result<()> {
     let port = args.port;
     let output_chain_name = format!("nozomi_tproxy_out_{}", pid);
 
-    let _guard = RedirectGuard::new(class_id, port, pid, output_chain_name.as_str(), cgroup_path.as_str());
+    let cgroup_guard = CGroupGuard::new(pid, cgroup_path.as_str(), false, class_id)?;
+    let _guard = RedirectGuard::new(port, output_chain_name.as_str(), cgroup_guard)?;
 
     let mut child = std::process::Command::new(&child_command[0]).args(&child_command[1..]).spawn()?;
 
@@ -98,7 +132,9 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> anyhow::Result<()> {
     let class_id = args.port;
     let port = args.port;
     let output_chain_name = format!("nozomi_tproxy_out_{}", pid);
-    let _guard = RedirectGuard::new(class_id, port, pid, output_chain_name.as_str(), cgroup_path.as_str());
+
+    let cgroup_guard = CGroupGuard::new(pid, cgroup_path.as_str(), true, class_id)?;
+    let _guard = RedirectGuard::new(port, output_chain_name.as_str(), cgroup_guard)?;
 
     let running = Arc::new(AtomicBool::new(true));
     let r = running.clone();
@@ -116,24 +152,19 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> anyhow::Result<()> {
 }
 
 struct TProxyGuard {
-    class_id: u32,
     port: u32,
-    pid: u32,
     mark: u32,
     output_chain_name: String,
     prerouting_chain_name: String,
-    cgroup_path: String,
+    cgroup_guard: CGroupGuard,
 }
 
 impl TProxyGuard {
-    fn new(class_id: u32, port: u32, pid: u32, mark: u32, output_chain_name: &str, prerouting_chain_name: &str, cgroup_path: &str) -> anyhow::Result<Self> {
+    fn new(port: u32, mark: u32, output_chain_name: &str, prerouting_chain_name: &str, cgroup_guard: CGroupGuard) -> anyhow::Result<Self> {
+        let class_id = cgroup_guard.class_id;
         (cmd_lib::run_cmd! {
         sudo ip rule add fwmark ${mark} table ${mark};
         sudo ip route add local 0.0.0.0/0 dev lo table ${mark};
-
-        sudo mkdir -p /sys/fs/cgroup/net_cls/${cgroup_path};
-        echo ${class_id} | sudo tee /sys/fs/cgroup/net_cls/${cgroup_path}/net_cls.classid > /dev/null;
-        echo ${pid} | sudo tee /sys/fs/cgroup/net_cls/${cgroup_path}/cgroup.procs > /dev/null;
 
         sudo iptables -t mangle -N ${prerouting_chain_name};
         sudo iptables -t mangle -A PREROUTING -j ${prerouting_chain_name};
@@ -147,13 +178,11 @@ impl TProxyGuard {
         })?;
 
         Ok(Self {
-            class_id,
             port,
-            pid,
             mark,
             output_chain_name: output_chain_name.to_owned(),
             prerouting_chain_name: prerouting_chain_name.to_owned(),
-            cgroup_path: cgroup_path.to_owned(),
+            cgroup_guard
         })
     }
 }
@@ -162,9 +191,9 @@ impl Drop for TProxyGuard {
     fn drop(&mut self) {
         let output_chain_name = &self.output_chain_name;
         let prerouting_chain_name = &self.prerouting_chain_name;
-        let pid = self.pid;
         let mark = self.mark;
-        let cgroup_path = &self.cgroup_path;
+
+        std::thread::sleep(Duration::from_millis(100));
 
         (cmd_lib::run_cmd! {
         sudo ip rule delete fwmark ${mark} table ${mark};
@@ -177,9 +206,6 @@ impl Drop for TProxyGuard {
         sudo iptables -t mangle -D OUTPUT -j ${output_chain_name};
         sudo iptables -t mangle -F ${output_chain_name};
         sudo iptables -t mangle -X ${output_chain_name};
-
-        echo ${pid} | sudo tee /sys/fs/cgroup/net_cls/cgroup.procs > /dev/null;
-        sudo rmdir /sys/fs/cgroup/net_cls/${cgroup_path};
     }).expect("drop iptables and cgroup failed");
     }
 }
@@ -196,7 +222,8 @@ fn proxy_new_command_tproxy(args: &Cli) -> anyhow::Result<()> {
     let port = args.port;
     let mark = pid;
 
-    let _guard = TProxyGuard::new(class_id, port, pid, mark, output_chain_name.as_str(), prerouting_chain_name.as_str(), cgroup_path.as_str());
+    let cgroup_guard = CGroupGuard::new(pid, cgroup_path.as_str(), false, class_id)?;
+    let _guard = TProxyGuard::new(port, mark, output_chain_name.as_str(), prerouting_chain_name.as_str(), cgroup_guard)?;
 
     let mut child = std::process::Command::new(&child_command[0]).args(&child_command[1..]).spawn()?;
     ctrlc::set_handler(move || {
@@ -214,7 +241,8 @@ fn proxy_existing_pid_tproxy(pid: u32, args: &Cli) -> anyhow::Result<()> {
     let port = args.port;
     let mark = pid;
 
-    let _guard = TProxyGuard::new(class_id, port, pid, mark, output_chain_name.as_str(), prerouting_chain_name.as_str(), cgroup_path.as_str());
+    let cgroup_guard = CGroupGuard::new(pid, cgroup_path.as_str(), true, class_id)?;
+    let _guard = TProxyGuard::new(port, mark, output_chain_name.as_str(), prerouting_chain_name.as_str(), cgroup_guard)?;
 
     let running = Arc::new(AtomicBool::new(true));
     let r = running.clone();

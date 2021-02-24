@@ -56,7 +56,7 @@ This section provides an example setup with DNS and TCP redirection. With the fo
 
 V2Ray config:
 
-```json
+```
 {
   "outbounds": [
     {

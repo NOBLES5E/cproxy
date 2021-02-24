@@ -2,11 +2,11 @@
 
 [![Continuous integration](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml/badge.svg)](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml)
 
-`cproxy` can redirect TCP and DNS (UDP) traffic made by a program to a local port.
+`cproxy` can redirect TCP and UDP traffic made by a program to a proxy, without requiring the program supporting a proxy.
 
 Compared to many existing complicated transparent proxy setup, `cproxy` usage is as easy as `proxychains`, but unlike `proxychains`, it works on any program (including static linked Go programs) and redirects DNS requests.
 
-Note: The local port for `cproxy` should be a transparent proxy port (such as V2Ray's `dokodemo-door` inbound and shadowsocks `ss-redir`). A good news is that even if you only have a SOCKS5 proxy, there are tools that can convert it to a transparent proxy for you (for example, [transocks](https://github.com/cybozu-go/transocks), [ipt2socks](https://github.com/zfl9/ipt2socks) and [ip2socks-go](https://github.com/lcdbin/ip2socks-go)).
+Note: The proxy used by `cproxy` should be a transparent proxy port (such as V2Ray's `dokodemo-door` inbound and shadowsocks `ss-redir`). A good news is that even if you only have a SOCKS5 proxy, there are tools that can convert it to a transparent proxy for you (for example, [transocks](https://github.com/cybozu-go/transocks), [ipt2socks](https://github.com/zfl9/ipt2socks) and [ip2socks-go](https://github.com/lcdbin/ip2socks-go)).
 
 ## Installation
 
@@ -44,8 +44,7 @@ cproxy --port <destination-local-port> --use-tproxy --pid <existing-process-pid>
 
 With `--use-tproxy`, there are several differences:
 
-* All TCP traffic proxied.
-* All UDP traffic proxied instead of only DNS traffic to port 53.
+* All UDP traffic are proxied instead of only DNS UDP traffic to port 53.
 * Your V2Ray or shadowsocks service should have `tproxy` enabled on the inbound port. For V2Ray, you need `"tproxy": "tproxy"` as in [V2Ray Documentation](https://www.v2ray.com/en/configuration/transport.html#sockoptobject). For shadowsocks, you need `-u` as shown in [shadowsocks manpage](http://manpages.org/ss-redir).
 
 An example setup can be found [here](https://github.com/NOBLES5E/cproxy/wiki/Example-setup-with-V2Ray).
@@ -62,7 +61,7 @@ The target process will be proxied as long as this `cproxy` command is running. 
 
 ## How does it work?
 
-By utilizing linux `cgroup` `net_cls`, the implementation is very simple! Just read through https://github.com/NOBLES5E/cproxy/blob/master/src/main.rs :)
+With the help of linux `cgroup`, the implementation is very simple! Just read through https://github.com/NOBLES5E/cproxy/blob/master/src/main.rs :)
 
 ## Limitations
 

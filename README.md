@@ -52,6 +52,69 @@ With `--use-tproxy`, there are several differences:
 
 ## Example setup
 
+### With `tproxy`
+
+This section provides an example setup with all UDP and TCP redirection. The V2Ray config:
+
+```
+{
+  "outbounds": [
+    {
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "<your-server-addr>",
+            "port": <your-server-port>,
+            "security": "auto",
+            "users": [
+              {
+                "alterId": ...,
+                "id": "..."
+              }
+            ]
+          }
+        ],
+      },
+      "streamSettings": {
+        "network": "tcp"
+      },
+    }
+  ],
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 1082,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "followRedirect": true,
+        "network": "tcp,udp"
+      },
+      "sniffing": {
+        "destOverride": [
+          "http",
+          "tls"
+        ],
+        "enabled": true,
+        "streamSettings": {
+          "sockopt": {
+            "tproxy": "tproxy"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+Then profit with:
+
+```
+cproxy --port 1082 --use-tproxy -- <your-program> --arg1 --arg2 ...
+```
+
+### Without `tproxy`
+
 This section provides an example setup with DNS and TCP redirection. With the following V2Ray config, you can proxy your program's DNS requests with 1.1.1.1 as the DNS server, and proxy all TCP connections.
 
 V2Ray config:

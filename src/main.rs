@@ -5,6 +5,7 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 struct Cli {
+    /// Redirect traffic to specific local port.
     #[structopt(long, default_value = "1081")]
     port: u32,
     /// Enable tproxy mode.

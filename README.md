@@ -44,8 +44,7 @@ cproxy --port <destination-local-port> --use-tproxy --pid <existing-process-pid>
 
 With `--use-tproxy`, there are several differences:
 
-* All TCP traffic proxied.
-* All UDP traffic proxied instead of only DNS traffic to port 53.
+* All UDP traffic are proxied instead of only DNS UDP traffic to port 53.
 * Your V2Ray or shadowsocks service should have `tproxy` enabled on the inbound port. For V2Ray, you need `"tproxy": "tproxy"` as in [V2Ray Documentation](https://www.v2ray.com/en/configuration/transport.html#sockoptobject). For shadowsocks, you need `-u` as shown in [shadowsocks manpage](http://manpages.org/ss-redir).
 
 An example setup can be found [here](https://github.com/NOBLES5E/cproxy/wiki/Example-setup-with-V2Ray).

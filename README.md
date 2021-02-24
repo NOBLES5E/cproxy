@@ -1,6 +1,6 @@
 ## cproxy
 
-[![Actions Status](https://github.com/NOBLES5E/cproxy/workflows/Continuous%20integration/badge.svg)](https://github.com/NOBLES5E/cproxy/actions)
+[![Continuous integration](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml/badge.svg)](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml)
 
 `cproxy` can redirect TCP and DNS (UDP) traffic made by a program to a local port.
 

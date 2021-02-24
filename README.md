@@ -1,4 +1,4 @@
-## Introduction
+## cproxy
 
 `cproxy` can redirect TCP and DNS (UDP) traffic made by a program to a local port.
 

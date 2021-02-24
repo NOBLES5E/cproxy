@@ -58,6 +58,8 @@ With `cproxy`, you can even proxy an existing process. This is very handy when y
 cproxy --port <destination-local-port> --pid <existing-process-pid>
 ```
 
+The target process will be proxied as long as this `cproxy` command is running. You can press Ctrl-C to stop proxying.
+
 ## How does it work?
 
 By utilizing linux `cgroup` `net_cls`, the implementation is very simple! Just read through https://github.com/NOBLES5E/cproxy/blob/master/src/main.rs :)

@@ -113,6 +113,7 @@ By utilizing linux `cgroup` `net_cls`, the implementation is very simple! Just r
 ## Limitations
 
 * `cproxy` requires `sudo` and root access to modify `cgroup`.
+* Currently only tested on Linux.
 
 ## Similar projects
 

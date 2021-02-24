@@ -106,6 +106,10 @@ Then profit with:
 cproxy --port 1082 -- <your-program> --arg1 --arg2 ...
 ```
 
+## How does it work?
+
+By utilizing linux `cgroup` `net_cls`, the implementation is very simple! Just read through https://github.com/NOBLES5E/cproxy/blob/master/src/main.rs :)
+
 ## Limitations
 
 * `cproxy` requires `sudo` and root access to modify `cgroup`.

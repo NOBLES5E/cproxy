@@ -249,7 +249,14 @@ fn main() -> anyhow::Result<()> {
             }
         }
         Some(existing_pid) => {
-            proxy_existing_pid(existing_pid, &args)?;
+            match args.use_tproxy {
+                true => {
+                    proxy_existing_pid_tproxy(existing_pid, &args)?;
+                }
+                false => {
+                    proxy_existing_pid(existing_pid, &args)?;
+                }
+            }
         }
     }
 

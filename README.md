@@ -1,8 +1,8 @@
 ## Introduction
 
-`cproxy` can redirect TCP and DNS (UDP) traffic made by a program to a local port (such as V2Ray's dokodemo-door inbound and `ss-redir`).
+`cproxy` can redirect TCP and DNS (UDP) traffic made by a program to a local port (such as V2Ray's `dokodemo-door` inbound and `ss-redir`).
 
-Compared to complicated existing transparent proxy setup, `cproxy` usage is as easy as `proxychains`, but unlike `proxychains`, it works on any program (including static linked Go programs) and redirects DNS requests.
+Compared to many existing complicated transparent proxy setup, `cproxy` usage is as easy as `proxychains`, but unlike `proxychains`, it works on any program (including static linked Go programs) and redirects DNS requests.
 
 ## Installation
 

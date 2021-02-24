@@ -6,7 +6,7 @@ Compared to complicated existing transparent proxy setup, `cproxy` usage is as e
 
 ## Installation
 
-### Using `cargo`
+You can install by downloading the binary from the [release page](https://github.com/NOBLES5E/cproxy/releases) or install with `cargo`:
 
 ```
 cargo install cproxy

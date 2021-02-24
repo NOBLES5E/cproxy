@@ -62,7 +62,7 @@ The target process will be proxied as long as this `cproxy` command is running. 
 
 ## How does it work?
 
-By utilizing linux `cgroup` `net_cls`, the implementation is very simple! Just read through https://github.com/NOBLES5E/cproxy/blob/master/src/main.rs :)
+With the help of linux `cgroup`, the implementation is very simple! Just read through https://github.com/NOBLES5E/cproxy/blob/master/src/main.rs :)
 
 ## Limitations
 

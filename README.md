@@ -30,6 +30,22 @@ With `cproxy`, you can even proxy an existing process. This is very handy when y
 cproxy --port <destination-local-port> --pid <existing-process-pid>
 ```
 
+### Advanced usage: use iptables tproxy
+
+If your system support `tproxy`, you can use `tproxy` with `--use-tproxy` flag:
+
+```bash
+cproxy --port <destination-local-port> --use-tproxy -- <your-program> --arg1 --arg2 ...
+# or for existing process
+cproxy --port <destination-local-port> --use-tproxy --pid <existing-process-pid>
+```
+
+By using `tproxy`, you have
+
+* All TCP traffic proxied.
+* All UDP traffic proxied instead of only DNS traffic to port 53.
+* Your V2Ray or shadowsocks service should have `tproxy` enabled on the inbound port. For V2Ray, you need `"tproxy": "tproxy"` as in [V2Ray Documentation](https://www.v2ray.com/en/configuration/transport.html#sockoptobject). For shadowsocks, you need `-u` as shown in [shadowsocks manpage](http://manpages.org/ss-redir).
+
 ## Example setup
 
 This section provides an example setup with DNS and TCP redirection. With the following V2Ray config, you can proxy your program's DNS requests with 1.1.1.1 as the DNS server, and proxy all TCP connections.

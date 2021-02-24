@@ -148,6 +148,6 @@ By utilizing linux `cgroup` `net_cls`, the implementation is very simple! Just r
 
 There are some awesome existing work:
 
-* [graftcp](https://github.com/hmgle/graftcp): work on most programs, but cannot proxy UDP (such as DNS) requests.
+* [graftcp](https://github.com/hmgle/graftcp): work on most programs, but cannot proxy UDP (such as DNS) requests. `graftcp` also has performance hit on the underlying program, since it uses `strace`.
 * [proxychains](https://github.com/haad/proxychains): easy to use, but not working on static linked programs (such as Go programs).
 * [proxychains-ng](https://github.com/rofl0r/proxychains-ng): similar to proxychains.

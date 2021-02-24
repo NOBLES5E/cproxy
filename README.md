@@ -24,17 +24,13 @@ You can launch a new program with `cproxy` with:
 cproxy --port <destination-local-port> -- <your-program> --arg1 --arg2 ...
 ```
 
-All TCP connections and DNS requests will be proxied.
-
-### Advanced usage: proxy an existing process
-
-With `cproxy`, you can even proxy an existing process. This is very handy when you want to proxy existing system services such as `docker`. To do this, just run
+All TCP connections and DNS requests will be proxied. In this case, your local transparent proxy should support DNS address overriding to make DNS requests redirection work properly. For an example setup, see [wiki](https://github.com/NOBLES5E/cproxy/wiki/Example-setup-with-V2Ray). If you don't want to proxy DNS requests, run with
 
 ```
-cproxy --port <destination-local-port> --pid <existing-process-pid>
+cproxy --port <destination-local-port> --no-dns -- <your-program> --arg1 --arg2 ...
 ```
 
-### Advanced usage: use iptables tproxy
+### Simple usage: use iptables tproxy
 
 If your system support `tproxy`, you can use `tproxy` with `--use-tproxy` flag:
 
@@ -50,155 +46,14 @@ With `--use-tproxy`, there are several differences:
 * All UDP traffic proxied instead of only DNS traffic to port 53.
 * Your V2Ray or shadowsocks service should have `tproxy` enabled on the inbound port. For V2Ray, you need `"tproxy": "tproxy"` as in [V2Ray Documentation](https://www.v2ray.com/en/configuration/transport.html#sockoptobject). For shadowsocks, you need `-u` as shown in [shadowsocks manpage](http://manpages.org/ss-redir).
 
-## Example setup
+An example setup can be found [here](https://github.com/NOBLES5E/cproxy/wiki/Example-setup-with-V2Ray).
 
-### With `tproxy`
+### Advanced usage: proxy an existing process
 
-This section provides an example setup with all UDP and TCP redirection. The V2Ray config:
-
-```
-{
-  "outbounds": [
-    {
-      "protocol": "vmess",
-      "settings": {
-        "vnext": [
-          {
-            "address": "<your-server-addr>",
-            "port": <your-server-port>,
-            "security": "auto",
-            "users": [
-              {
-                "alterId": ...,
-                "id": "..."
-              }
-            ]
-          }
-        ],
-      },
-      "streamSettings": {
-        "network": "tcp"
-      },
-    }
-  ],
-  "inbounds": [
-    {
-      "listen": "127.0.0.1",
-      "port": 1082,
-      "protocol": "dokodemo-door",
-      "settings": {
-        "followRedirect": true,
-        "network": "tcp,udp"
-      },
-      "sniffing": {
-        "destOverride": [
-          "http",
-          "tls"
-        ],
-        "enabled": true,
-        "streamSettings": {
-          "sockopt": {
-            "tproxy": "tproxy"
-          }
-        }
-      }
-    }
-  ]
-}
-```
-
-Then profit with:
+With `cproxy`, you can even proxy an existing process. This is very handy when you want to proxy existing system services such as `docker`. To do this, just run
 
 ```
-cproxy --port 1082 --use-tproxy -- <your-program> --arg1 --arg2 ...
-```
-
-### Without `tproxy`
-
-This section provides an example setup with DNS and TCP redirection. With the following V2Ray config, you can proxy your program's DNS requests with 1.1.1.1 as the DNS server, and proxy all TCP connections.
-
-V2Ray config:
-
-```
-{
-  "outbounds": [
-    {
-      "protocol": "vmess",
-      "settings": {
-        "vnext": [
-          {
-            "address": "<your-server-addr>",
-            "port": <your-server-port>,
-            "security": "auto",
-            "users": [
-              {
-                "alterId": ...,
-                "id": "..."
-              }
-            ]
-          }
-        ],
-        "domainStrategy": "UseIP"
-      },
-      "streamSettings": {
-        "network": "tcp"
-      },
-      "tag": "out"
-    },
-    {
-      "protocol": "dns",
-      "settings": {
-        "network": "udp",
-        "address": "1.1.1.1",
-        "port": 53
-      },
-      "tag": "dns-out"
-    }
-  ],
-  "dns": {
-    "servers": [
-      "1.1.1.1"
-    ]
-  },
-  "routing": {
-    "rules": [
-      {
-        "port": 1082,
-        "network": "udp",
-        "inboundTag": [
-          "transparent"
-        ],
-        "outboundTag": "dns-out",
-        "type": "field"
-      }
-    ]
-  },
-  "inbounds": [
-    {
-      "listen": "127.0.0.1",
-      "port": 1082,
-      "protocol": "dokodemo-door",
-      "settings": {
-        "followRedirect": true,
-        "network": "tcp,udp"
-      },
-      "sniffing": {
-        "destOverride": [
-          "http",
-          "tls"
-        ],
-        "enabled": true
-      },
-      "tag": "transparent"
-    }
-  ]
-}
-```
-
-Then profit with:
-
-```
-cproxy --port 1082 -- <your-program> --arg1 --arg2 ...
+cproxy --port <destination-local-port> --pid <existing-process-pid>
 ```
 
 ## How does it work?

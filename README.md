@@ -40,7 +40,7 @@ cproxy --port <destination-local-port> --use-tproxy -- <your-program> --arg1 --a
 cproxy --port <destination-local-port> --use-tproxy --pid <existing-process-pid>
 ```
 
-By using `tproxy`, you have
+With `--use-tproxy`, there are several differences:
 
 * All TCP traffic proxied.
 * All UDP traffic proxied instead of only DNS traffic to port 53.

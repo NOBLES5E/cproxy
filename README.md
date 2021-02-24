@@ -2,7 +2,7 @@
 
 [![Continuous integration](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml/badge.svg)](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml)
 
-`cproxy` can redirect TCP and UDP traffic made by a program to a proxy.
+`cproxy` can redirect TCP and UDP traffic made by a program to a proxy, without requiring the program supporting a proxy.
 
 Compared to many existing complicated transparent proxy setup, `cproxy` usage is as easy as `proxychains`, but unlike `proxychains`, it works on any program (including static linked Go programs) and redirects DNS requests.
 

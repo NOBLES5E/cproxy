@@ -7,10 +7,13 @@ use structopt::StructOpt;
 struct Cli {
     #[structopt(long, default_value = "1081")]
     port: u32,
+    /// Enable tproxy mode.
     #[structopt(long)]
     use_tproxy: bool,
+    /// Do not redirect DNS traffic. This option only works without tproxy.
     #[structopt(long)]
     no_dns: bool,
+    /// Proxy an existing process.
     #[structopt(long)]
     pid: Option<u32>,
     #[structopt(subcommand)]

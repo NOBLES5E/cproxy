@@ -151,6 +151,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cproxy"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cmd_lib",
+ "ctrlc",
+ "human-panic",
+ "structopt",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "ctrlc"
 version = "3.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -272,19 +285,6 @@ dependencies = [
  "cc",
  "cfg-if",
  "libc",
-]
-
-[[package]]
-name = "nozomi-cproxy"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cmd_lib",
- "ctrlc",
- "human-panic",
- "structopt",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]

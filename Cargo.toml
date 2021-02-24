@@ -1,7 +1,9 @@
 [package]
-name = "nozomi-cproxy"
+name = "cproxy"
 version = "0.1.0"
 authors = ["Xiangru Lian <admin@mail.xrlian.com>"]
+description = "Transparent proxy built on cgroup net_cls."
+license = "AGPL-3.0-or-later"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

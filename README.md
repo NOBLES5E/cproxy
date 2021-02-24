@@ -14,8 +14,20 @@ cargo install cproxy
 
 ## Usage
 
+### Simple usage: just like `proxychains`
+
+You can launch a new program with `cproxy` with:
+
 ```
 cproxy --port <destination-local-port> -- <your-program> --arg1 --arg2 ...
+```
+
+### Advanced usage: proxy an existing process
+
+With `cproxy`, you can even proxy an existing process. This is very handy when you want to proxy existing system services such as `docker`. To do this, just run
+
+```
+cproxy --port <destination-local-port> --pid <existing-process-pid>
 ```
 
 ## Example setup

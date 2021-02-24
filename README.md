@@ -126,6 +126,7 @@ By utilizing linux `cgroup` `net_cls`, the implementation is very simple! Just r
 
 * `cproxy` requires `sudo` and root access to modify `cgroup`.
 * Currently only tested on Linux.
+* The local destination port should be a port like V2Ray `dokodemo-door`, not SOCKS5 etc.
 
 ## Similar projects
 

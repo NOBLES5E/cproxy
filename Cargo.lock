@@ -114,7 +114,7 @@ dependencies = [
 
 [[package]]
 name = "cproxy"
-version = "2.0.2"
+version = "2.1.0"
 dependencies = [
  "anyhow",
  "cmd_lib",

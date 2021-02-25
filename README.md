@@ -61,7 +61,7 @@ The target process will be proxied as long as this `cproxy` command is running. 
 
 ## How does it work?
 
-With the help of linux `cgroup`, the implementation is very simple! Just read through https://github.com/NOBLES5E/cproxy/blob/master/src/main.rs :)
+`cproxy` creates a unique `cgroup` for the proxied program, and redirect its traffic with packet rules.
 
 ## Limitations
 

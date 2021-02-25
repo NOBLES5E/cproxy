@@ -76,7 +76,7 @@ There are some awesome existing work:
 * [proxychains](https://github.com/haad/proxychains): easy to use, but not working on static linked programs (such as Go programs).
 * [proxychains-ng](https://github.com/rofl0r/proxychains-ng): similar to proxychains.
 * [cgproxy](https://github.com/springzfx/cgproxy): `cgproxy` also uses cgroup to do transparent proxy, and the idea is similar to `cproxy`'s. There are some differences in UX and system requirements:
-  * `cgproxy` requires system `cgroup` v2 support, while `cproxy` only requires v1.
+  * `cgproxy` requires system `cgroup` v2 support, while `cproxy` requires v1.
   * `cgproxy` requires a background daemon process `cgproxyd` running, while `cproxy` does not.
   * `cgproxy` requires `tproxy`, which is optional in `cproxy`.
   * `cgproxy` can be used to do global proxy, while `cproxy` does not intended to support global proxy.

@@ -49,6 +49,8 @@ With `--use-tproxy`, there are several differences:
 
 An example setup can be found [here](https://github.com/NOBLES5E/cproxy/wiki/Example-setup-with-V2Ray).
 
+Note that when you are using the `tproxy` mode, you can override the DNS server address with `cproxy --use-tproxy --override-dns <your-dns-server-addr> ...`. This is useful when you want to use a different DNS server for a specific application.
+
 ### Advanced usage: proxy an existing process
 
 With `cproxy`, you can even proxy an existing process. This is very handy when you want to proxy existing system services such as `docker`. To do this, just run

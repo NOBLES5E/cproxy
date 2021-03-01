@@ -8,12 +8,15 @@ struct Cli {
     /// Redirect traffic to specific local port.
     #[structopt(long, default_value = "1081")]
     port: u32,
-    /// Enable tproxy mode.
-    #[structopt(long)]
-    use_tproxy: bool,
     /// Do not redirect DNS traffic. This option only works without tproxy.
     #[structopt(long)]
     no_dns: bool,
+    /// Enable tproxy mode.
+    #[structopt(long)]
+    use_tproxy: bool,
+    /// Override dns server address. This option only works with tproxy mode
+    #[structopt(long)]
+    override_dns: Option<String>,
     /// Proxy an existing process.
     #[structopt(long)]
     pid: Option<u32>,
@@ -72,7 +75,7 @@ impl Drop for CGroupGuard {
                 echo ${pid} | sudo tee /sys/fs/cgroup/net_cls/cgroup.procs > /dev/null;
                 sudo rmdir /sys/fs/cgroup/net_cls/${cgroup_path};
                 })
-                .expect("drop cgroup failed");
+                    .expect("drop cgroup failed");
             }
         }
     }
@@ -92,6 +95,7 @@ impl RedirectGuard {
         cgroup_guard: CGroupGuard,
         redirect_dns: bool,
     ) -> anyhow::Result<Self> {
+        tracing::debug!("creating redirect guard on port {}, with redirect_dns: {}", port, redirect_dns);
         let class_id = cgroup_guard.class_id;
         (cmd_lib::run_cmd! {
         sudo iptables -t nat -N ${output_chain_name};
@@ -123,7 +127,7 @@ impl Drop for RedirectGuard {
           sudo iptables -t nat -F ${output_chain_name};
           sudo iptables -t nat -X ${output_chain_name};
         })
-        .expect("drop iptables and cgroup failed");
+            .expect("drop iptables and cgroup failed");
     }
 }
 
@@ -186,6 +190,7 @@ struct TProxyGuard {
     output_chain_name: String,
     prerouting_chain_name: String,
     cgroup_guard: CGroupGuard,
+    override_dns: Option<String>,
 }
 
 impl TProxyGuard {
@@ -195,8 +200,10 @@ impl TProxyGuard {
         output_chain_name: &str,
         prerouting_chain_name: &str,
         cgroup_guard: CGroupGuard,
+        override_dns: Option<String>,
     ) -> anyhow::Result<Self> {
         let class_id = cgroup_guard.class_id;
+        tracing::debug!("creating redirect guard on port {}, with override_dns: {:?}", port, override_dns);
         (cmd_lib::run_cmd! {
         sudo ip rule add fwmark ${mark} table ${mark};
         sudo ip route add local 0.0.0.0/0 dev lo table ${mark};
@@ -212,12 +219,21 @@ impl TProxyGuard {
         sudo iptables -t mangle -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} -j MARK --set-mark ${mark};
         })?;
 
+        if let Some(override_dns) = &override_dns {
+            (cmd_lib::run_cmd! {
+            sudo iptables -t nat -N ${output_chain_name};
+            sudo iptables -t nat -A OUTPUT -j ${output_chain_name};
+            sudo iptables -t nat -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} --dport 53 -j DNAT --to-destination ${override_dns};
+            })?;
+        }
+
         Ok(Self {
             port,
             mark,
             output_chain_name: output_chain_name.to_owned(),
             prerouting_chain_name: prerouting_chain_name.to_owned(),
             cgroup_guard,
+            override_dns,
         })
     }
 }
@@ -242,7 +258,15 @@ impl Drop for TProxyGuard {
             sudo iptables -t mangle -F ${output_chain_name};
             sudo iptables -t mangle -X ${output_chain_name};
         })
-        .expect("drop iptables and cgroup failed");
+            .expect("drop iptables and cgroup failed");
+
+        if self.override_dns.is_some() {
+            (cmd_lib::run_cmd! {
+            sudo iptables -t nat -D OUTPUT -j ${output_chain_name};
+            sudo iptables -t nat -F ${output_chain_name};
+            sudo iptables -t nat -X ${output_chain_name};
+            }).expect("drop iptables failed");
+        }
     }
 }
 
@@ -268,6 +292,7 @@ fn proxy_new_command_tproxy(args: &Cli) -> anyhow::Result<()> {
         output_chain_name.as_str(),
         prerouting_chain_name.as_str(),
         cgroup_guard,
+        args.override_dns.clone(),
     )?;
 
     let mut child = std::process::Command::new(&child_command[0])
@@ -295,6 +320,7 @@ fn proxy_existing_pid_tproxy(pid: u32, args: &Cli) -> anyhow::Result<()> {
         output_chain_name.as_str(),
         prerouting_chain_name.as_str(),
         cgroup_guard,
+        args.override_dns.clone(),
     )?;
 
     let running = Arc::new(AtomicBool::new(true));

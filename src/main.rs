@@ -6,7 +6,7 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug)]
 struct Cli {
     /// Redirect traffic to specific local port.
-    #[structopt(long, default_value = "1081")]
+    #[structopt(long, env = "CPROXY_PORT")]
     port: u32,
     /// Do not redirect DNS traffic. This option only works without tproxy.
     #[structopt(long)]

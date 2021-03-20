@@ -203,7 +203,7 @@ impl TProxyGuard {
         override_dns: Option<String>,
     ) -> anyhow::Result<Self> {
         let class_id = cgroup_guard.class_id;
-        tracing::debug!("creating redirect guard on port {}, with override_dns: {:?}", port, override_dns);
+        tracing::debug!("creating tproxy guard on port {}, with override_dns: {:?}", port, override_dns);
         (cmd_lib::run_cmd! {
         sudo ip rule add fwmark ${mark} table ${mark};
         sudo ip route add local 0.0.0.0/0 dev lo table ${mark};

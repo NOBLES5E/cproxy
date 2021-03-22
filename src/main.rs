@@ -12,7 +12,7 @@ mod guards;
 #[derive(StructOpt, Debug)]
 struct Cli {
     /// Redirect traffic to specific local port.
-    #[structopt(long, env = "CPROXY_PORT", default_value="1080")]
+    #[structopt(long, env = "CPROXY_PORT", default_value = "1080")]
     port: u32,
     /// redirect DNS traffic. This option only works with redirect mode
     #[structopt(long)]
@@ -45,7 +45,7 @@ fn proxy_new_command(args: &Cli) -> anyhow::Result<()> {
     tracing::info!("subcommand {:?}", child_command);
 
     let cgroup_path = format!("nozomi_tproxy_{}", pid);
-    let class_id = args.port;
+    let class_id = pid;
     let port = args.port;
     let output_chain_name = format!("nozomi_tproxy_out_{}", pid);
 

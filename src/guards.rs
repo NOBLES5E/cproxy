@@ -72,6 +72,8 @@ impl RedirectGuard {
         (cmd_lib::run_cmd! {
         sudo iptables -t nat -N ${output_chain_name};
         sudo iptables -t nat -A OUTPUT -j ${output_chain_name};
+        sudo iptables -t nat -A ${output_chain_name} -p udp -o lo -j RETURN;
+        sudo iptables -t nat -A ${output_chain_name} -p tcp -o lo -j RETURN;
         sudo iptables -t nat -A ${output_chain_name} -p tcp -m cgroup --cgroup ${class_id} -j REDIRECT --to-ports ${port};
         })?;
 
@@ -130,11 +132,15 @@ impl TProxyGuard {
 
         sudo iptables -t mangle -N ${prerouting_chain_name};
         sudo iptables -t mangle -A PREROUTING -j ${prerouting_chain_name};
+        sudo iptables -t mangle -A ${prerouting_chain_name} -p tcp -o lo -j RETURN;
+        sudo iptables -t mangle -A ${prerouting_chain_name} -p udp -o lo -j RETURN;
         sudo iptables -t mangle -A ${prerouting_chain_name} -p udp -m mark --mark ${mark} -j TPROXY --on-ip 127.0.0.1 --on-port ${port};
         sudo iptables -t mangle -A ${prerouting_chain_name} -p tcp -m mark --mark ${mark} -j TPROXY --on-ip 127.0.0.1 --on-port ${port};
 
         sudo iptables -t mangle -N ${output_chain_name};
         sudo iptables -t mangle -A OUTPUT -j ${output_chain_name};
+        sudo iptables -t mangle -A ${output_chain_name} -p tcp -o lo -j RETURN;
+        sudo iptables -t mangle -A ${output_chain_name} -p udp -o lo -j RETURN;
         sudo iptables -t mangle -A ${output_chain_name} -p tcp -m cgroup --cgroup ${class_id} -j MARK --set-mark ${mark};
         sudo iptables -t mangle -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} -j MARK --set-mark ${mark};
         })?;
@@ -143,6 +149,7 @@ impl TProxyGuard {
             (cmd_lib::run_cmd! {
             sudo iptables -t nat -N ${output_chain_name};
             sudo iptables -t nat -A OUTPUT -j ${output_chain_name};
+            sudo iptables -t nat -A ${output_chain_name} -p udp -o lo -j RETURN;
             sudo iptables -t nat -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} --dport 53 -j DNAT --to-destination ${override_dns};
             })?;
         }

@@ -148,6 +148,7 @@ fn proxy_new_command(args: &Cli) -> anyhow::Result<()> {
     let _guard = RedirectGuard::new(port, output_chain_name.as_str(), cgroup_guard, !args.no_dns)?;
 
     let mut child = std::process::Command::new(&child_command[0])
+        .env("CPROXY_ENV", format!("cproxy/{}", port))
         .args(&child_command[1..])
         .spawn()?;
 
@@ -296,6 +297,7 @@ fn proxy_new_command_tproxy(args: &Cli) -> anyhow::Result<()> {
     )?;
 
     let mut child = std::process::Command::new(&child_command[0])
+        .env("CPROXY_ENV", format!("cproxy/{}", port))
         .args(&child_command[1..])
         .spawn()?;
     ctrlc::set_handler(move || {

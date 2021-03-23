@@ -1,6 +1,6 @@
 ## cproxy
 
-[![Continuous integration](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml/badge.svg)](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml)
+[![CI](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml/badge.svg)](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml)
 
 `cproxy` can redirect TCP and UDP traffic made by a program to a proxy, without requiring the program supporting a
 proxy.

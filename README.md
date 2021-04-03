@@ -24,6 +24,7 @@ install with `cargo`:
 
 ```
 cargo install cproxy
+chown root:root $(which cproxy) && chmod +s $(which cproxy)
 ```
 
 ## Usage
@@ -96,7 +97,7 @@ You will be able to see log in `dmesg`. Note that this requires a recent enough 
 
 ## Limitations
 
-* `cproxy` requires `sudo` and root access to modify `cgroup`.
+* `cproxy` requires root access to modify `cgroup`.
 * Currently only tested on Linux.
 
 ## Similar projects
@@ -110,7 +111,7 @@ There are some awesome existing work:
 * [proxychains-ng](https://github.com/rofl0r/proxychains-ng): similar to proxychains.
 * [cgproxy](https://github.com/springzfx/cgproxy): `cgproxy` also uses cgroup to do transparent proxy, and the idea is
   similar to `cproxy`'s. There are some differences in UX and system requirements:
-    * `cgproxy` requires system `cgroup` v2 support, while `cproxy` requires v1.
+    * `cgproxy` requires system `cgroup` v2 support, while `cproxy` works with both v1 and v2.
     * `cgproxy` requires a background daemon process `cgproxyd` running, while `cproxy` does not.
     * `cgproxy` requires `tproxy`, which is optional in `cproxy`.
     * `cgproxy` can be used to do global proxy, while `cproxy` does not intended to support global proxy.

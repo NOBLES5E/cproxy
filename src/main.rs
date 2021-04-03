@@ -44,12 +44,10 @@ fn proxy_new_command(args: &Cli) -> anyhow::Result<()> {
         .expect("must have command specified if --pid not provided");
     tracing::info!("subcommand {:?}", child_command);
 
-    let cgroup_path = format!("nozomi_tproxy_{}", pid);
-    let class_id = pid;
     let port = args.port;
     let output_chain_name = format!("nozomi_tproxy_out_{}", pid);
 
-    let cgroup_guard = CGroupGuard::new(pid, cgroup_path.as_str(), false, class_id)?;
+    let cgroup_guard = CGroupGuard::new(pid)?;
     let _guard: Box<dyn Drop> = match args.mode.as_str() {
         "redirect" => { Box::new(RedirectGuard::new(port, output_chain_name.as_str(), cgroup_guard, args.redirect_dns)?) }
         "tproxy" => {
@@ -77,10 +75,13 @@ fn proxy_new_command(args: &Cli) -> anyhow::Result<()> {
         &_ => { unimplemented!() }
     };
 
+    let original_uid = nix::unistd::getuid();
+    nix::unistd::seteuid(original_uid)?;
     let mut child = std::process::Command::new(&child_command[0])
         .env("CPROXY_ENV", format!("cproxy/{}", port))
         .args(&child_command[1..])
         .spawn()?;
+    nix::unistd::seteuid(nix::unistd::Uid::from_raw(0))?;
 
     ctrlc::set_handler(move || {
         println!("received ctrl-c, terminating...");
@@ -92,12 +93,10 @@ fn proxy_new_command(args: &Cli) -> anyhow::Result<()> {
 }
 
 fn proxy_existing_pid(pid: u32, args: &Cli) -> anyhow::Result<()> {
-    let cgroup_path = format!("nozomi_tproxy_{}", pid);
-    let class_id = args.port;
     let port = args.port;
     let output_chain_name = format!("nozomi_tproxy_out_{}", pid);
 
-    let cgroup_guard = CGroupGuard::new(pid, cgroup_path.as_str(), true, class_id)?;
+    let cgroup_guard = CGroupGuard::new(pid)?;
     let _guard: Box<dyn Drop> = match args.mode.as_str() {
         "redirect" => { Box::new(RedirectGuard::new(port, output_chain_name.as_str(), cgroup_guard, !args.redirect_dns)?) }
         "tproxy" => {
@@ -144,6 +143,9 @@ fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_env("LOG_LEVEL"))
         .init();
+    nix::unistd::seteuid(nix::unistd::Uid::from_raw(0)).expect(
+        "cproxy failed to seteuid, please `chown root:root` and `chmod +s` on cproxy binary"
+    );
     let args: Cli = Cli::from_args();
 
     match args.pid {

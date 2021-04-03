@@ -1,54 +1,41 @@
 use std::time::Duration;
+use cgroups_rs::{Cgroup, CgroupPid};
+use cgroups_rs::cgroup_builder::CgroupBuilder;
 
 #[allow(unused_variables)]
 pub struct CGroupGuard {
     pub pid: u32,
-    pub cgroup_path: String,
+    pub cg: Cgroup,
+    pub cg_path: String,
     pub class_id: u32,
-    pub remove_children: bool,
 }
 
 impl CGroupGuard {
     pub fn new(
         pid: u32,
-        cgroup_path: &str,
-        remove_children: bool,
-        class_id: u32,
     ) -> anyhow::Result<Self> {
-        (cmd_lib::run_cmd! {
-        sudo mkdir -p /sys/fs/cgroup/net_cls/${cgroup_path};
-        echo ${class_id} | sudo tee /sys/fs/cgroup/net_cls/${cgroup_path}/net_cls.classid > /dev/null;
-        echo ${pid} | sudo tee /sys/fs/cgroup/net_cls/${cgroup_path}/cgroup.procs > /dev/null;
-        })?;
-
+        let hier = cgroups_rs::hierarchies::auto();
+        let class_id = pid;
+        let cg_path = format!("cproxy-{}", pid);
+        let cg: Cgroup = CgroupBuilder::new(cg_path.as_str())
+            .network().class_id(class_id as u64).done()
+            .build(hier);
+        cg.add_task(CgroupPid::from(pid as u64)).unwrap();
         Ok(Self {
             pid,
-            cgroup_path: cgroup_path.to_owned(),
+            cg,
+            cg_path,
             class_id,
-            remove_children,
         })
     }
 }
 
 impl Drop for CGroupGuard {
     fn drop(&mut self) {
-        let cgroup_path = &self.cgroup_path;
-        let pid = self.pid;
-        match self.remove_children {
-            true => {
-                (cmd_lib::run_cmd! {
-                 cat /sys/fs/cgroup/net_cls/${cgroup_path}/cgroup.procs | xargs -I "{}" bash -c "echo {} | sudo tee /sys/fs/cgroup/net_cls/cgroup.procs > /dev/null";
-                 sudo rmdir /sys/fs/cgroup/net_cls/${cgroup_path};
-                 }).expect("drop cgroup failed");
-            }
-            false => {
-                (cmd_lib::run_cmd! {
-                echo ${pid} | sudo tee /sys/fs/cgroup/net_cls/cgroup.procs > /dev/null;
-                sudo rmdir /sys/fs/cgroup/net_cls/${cgroup_path};
-                })
-                    .expect("drop cgroup failed");
-            }
+        for t in self.cg.tasks() {
+            self.cg.remove_task(t);
         }
+        self.cg.delete().unwrap();
     }
 }
 
@@ -69,12 +56,14 @@ impl RedirectGuard {
     ) -> anyhow::Result<Self> {
         tracing::debug!("creating redirect guard on port {}, with redirect_dns: {}", port, redirect_dns);
         let class_id = cgroup_guard.class_id;
+        let cgroup_path = cgroup_guard.cg_path.as_str();
         (cmd_lib::run_cmd! {
         sudo iptables -t nat -N ${output_chain_name};
         sudo iptables -t nat -A OUTPUT -j ${output_chain_name};
         sudo iptables -t nat -A ${output_chain_name} -p udp -o lo -j RETURN;
         sudo iptables -t nat -A ${output_chain_name} -p tcp -o lo -j RETURN;
         sudo iptables -t nat -A ${output_chain_name} -p tcp -m cgroup --cgroup ${class_id} -j REDIRECT --to-ports ${port};
+        sudo iptables -t nat -A ${output_chain_name} -p tcp -m cgroup --cgroup --path ${cgroup_path} -j REDIRECT --to-ports ${port};
         })?;
 
         if redirect_dns {
@@ -125,6 +114,7 @@ impl TProxyGuard {
         override_dns: Option<String>,
     ) -> anyhow::Result<Self> {
         let class_id = cgroup_guard.class_id;
+        let cg_path = cgroup_guard.cg_path.as_str();
         tracing::debug!("creating tproxy guard on port {}, with override_dns: {:?}", port, override_dns);
         (cmd_lib::run_cmd! {
         sudo ip rule add fwmark ${mark} table ${mark};
@@ -143,6 +133,8 @@ impl TProxyGuard {
         sudo iptables -t mangle -A ${output_chain_name} -p udp -o lo -j RETURN;
         sudo iptables -t mangle -A ${output_chain_name} -p tcp -m cgroup --cgroup ${class_id} -j MARK --set-mark ${mark};
         sudo iptables -t mangle -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} -j MARK --set-mark ${mark};
+        sudo iptables -t mangle -A ${output_chain_name} -p tcp -m cgroup --path ${cg_path} -j MARK --set-mark ${mark};
+        sudo iptables -t mangle -A ${output_chain_name} -p udp -m cgroup --path ${cg_path} -j MARK --set-mark ${mark};
         })?;
 
         if let Some(override_dns) = &override_dns {
@@ -151,6 +143,7 @@ impl TProxyGuard {
             sudo iptables -t nat -A OUTPUT -j ${output_chain_name};
             sudo iptables -t nat -A ${output_chain_name} -p udp -o lo -j RETURN;
             sudo iptables -t nat -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} --dport 53 -j DNAT --to-destination ${override_dns};
+            sudo iptables -t nat -A ${output_chain_name} -p udp -m cgroup --path ${cg_path} --dport 53 -j DNAT --to-destination ${override_dns};
             })?;
         }
 

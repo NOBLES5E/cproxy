@@ -76,12 +76,15 @@ fn proxy_new_command(args: &Cli) -> anyhow::Result<()> {
     };
 
     let original_uid = nix::unistd::getuid();
+    let original_gid = nix::unistd::getgid();
     nix::unistd::seteuid(original_uid)?;
+    nix::unistd::setegid(original_gid)?;
     let mut child = std::process::Command::new(&child_command[0])
         .env("CPROXY_ENV", format!("cproxy/{}", port))
         .args(&child_command[1..])
         .spawn()?;
     nix::unistd::seteuid(nix::unistd::Uid::from_raw(0))?;
+    nix::unistd::setegid(nix::unistd::Gid::from_raw(0))?;
 
     ctrlc::set_handler(move || {
         println!("received ctrl-c, terminating...");
@@ -144,6 +147,9 @@ fn main() -> anyhow::Result<()> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_env("LOG_LEVEL"))
         .init();
     nix::unistd::seteuid(nix::unistd::Uid::from_raw(0)).expect(
+        "cproxy failed to seteuid, please `chown root:root` and `chmod +s` on cproxy binary"
+    );
+    nix::unistd::setegid(nix::unistd::Gid::from_raw(0)).expect(
         "cproxy failed to seteuid, please `chown root:root` and `chmod +s` on cproxy binary"
     );
     let args: Cli = Cli::from_args();

@@ -63,12 +63,13 @@ impl RedirectGuard {
         iptables -t nat -A ${output_chain_name} -p udp -o lo -j RETURN;
         iptables -t nat -A ${output_chain_name} -p tcp -o lo -j RETURN;
         iptables -t nat -A ${output_chain_name} -p tcp -m cgroup --cgroup ${class_id} -j REDIRECT --to-ports ${port};
-        iptables -t nat -A ${output_chain_name} -p tcp -m cgroup --cgroup --path ${cgroup_path} -j REDIRECT --to-ports ${port};
+        iptables -t nat -A ${output_chain_name} -p tcp -m cgroup --path ${cgroup_path} -j REDIRECT --to-ports ${port};
         })?;
 
         if redirect_dns {
             (cmd_lib::run_cmd! {
             iptables -t nat -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} --dport 53 -j REDIRECT --to-ports ${port};
+            iptables -t nat -A ${output_chain_name} -p udp -m cgroup --path ${cgroup_path} --dport 53 -j REDIRECT --to-ports ${port};
             })?;
         }
 

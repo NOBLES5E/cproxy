@@ -95,12 +95,67 @@ impl Drop for RedirectGuard {
     }
 }
 
+pub struct IpRuleGuardInner {
+    fwmark: u32,
+    table: u32,
+    guard_thread: std::thread::JoinHandle<()>,
+    stop_channel: flume::Sender<()>,
+}
+
+#[allow(unused)]
+pub struct IpRuleGuard {
+    inner: Box<dyn Drop>,
+}
+
+impl IpRuleGuard {
+    pub fn new(fwmark: u32, table: u32) -> Self {
+        let (sender, receiver) = flume::unbounded();
+        let thread = std::thread::spawn(move || {
+            (cmd_lib::run_cmd! {
+              ip rule add fwmark ${fwmark} table ${table};
+              ip route add local 0.0.0.0/0 dev lo table ${table};
+            }).expect("set routing rules failed");
+            loop {
+                if (cmd_lib::run_fun! { ip rule list fwmark ${fwmark} }).unwrap().is_empty() {
+                    tracing::warn!("detected disappearing routing policy, possibly due to interruped network, resetting");
+                    (cmd_lib::run_cmd! {
+                      ip rule add fwmark ${fwmark} table ${table};
+                    }).expect("set routing rules failed");
+                }
+                if receiver.recv_timeout(Duration::from_secs(1)).is_ok() {
+                    break;
+                }
+            }
+        });
+        let inner = IpRuleGuardInner {
+            fwmark,
+            table,
+            guard_thread: thread,
+            stop_channel: sender,
+        };
+        let inner = with_drop::with_drop(inner, |x| {
+            x.stop_channel.send(()).unwrap();
+            x.guard_thread.join().unwrap();
+            let mark = x.fwmark;
+            let table = x.table;
+            (cmd_lib::run_cmd! {
+                ip rule delete fwmark ${mark} table ${table};
+                ip route delete local 0.0.0.0/0 dev lo table ${table};
+            }).expect("drop routing rules failed");
+        });
+        Self {
+            inner: Box::new(inner)
+        }
+    }
+}
+
 #[allow(unused)]
 pub struct TProxyGuard {
     port: u32,
     mark: u32,
     output_chain_name: String,
     prerouting_chain_name: String,
+    iprule_guard: IpRuleGuard,
     cgroup_guard: CGroupGuard,
     override_dns: Option<String>,
 }
@@ -117,9 +172,8 @@ impl TProxyGuard {
         let class_id = cgroup_guard.class_id;
         let cg_path = cgroup_guard.cg_path.as_str();
         tracing::debug!("creating tproxy guard on port {}, with override_dns: {:?}", port, override_dns);
+        let iprule_guard = IpRuleGuard::new(mark, mark);
         (cmd_lib::run_cmd! {
-        ip rule add fwmark ${mark} table ${mark};
-        ip route add local 0.0.0.0/0 dev lo table ${mark};
 
         iptables -t mangle -N ${prerouting_chain_name};
         iptables -t mangle -A PREROUTING -j ${prerouting_chain_name};
@@ -153,6 +207,7 @@ impl TProxyGuard {
             mark,
             output_chain_name: output_chain_name.to_owned(),
             prerouting_chain_name: prerouting_chain_name.to_owned(),
+            iprule_guard,
             cgroup_guard,
             override_dns,
         })
@@ -163,14 +218,10 @@ impl Drop for TProxyGuard {
     fn drop(&mut self) {
         let output_chain_name = &self.output_chain_name;
         let prerouting_chain_name = &self.prerouting_chain_name;
-        let mark = self.mark;
 
         std::thread::sleep(Duration::from_millis(100));
 
         (cmd_lib::run_cmd! {
-            ip rule delete fwmark ${mark} table ${mark};
-            ip route delete local 0.0.0.0/0 dev lo table ${mark};
-
             iptables -t mangle -D PREROUTING -j ${prerouting_chain_name};
             iptables -t mangle -F ${prerouting_chain_name};
             iptables -t mangle -X ${prerouting_chain_name};

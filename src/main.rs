@@ -45,12 +45,14 @@ fn proxy_new_command(args: &Cli) -> anyhow::Result<()> {
     tracing::info!("subcommand {:?}", child_command);
 
     let port = args.port;
-    let output_chain_name = format!("nozomi_tproxy_out_{}", pid);
 
     let cgroup_guard = CGroupGuard::new(pid)?;
     let _guard: Box<dyn Drop> = match args.mode.as_str() {
-        "redirect" => { Box::new(RedirectGuard::new(port, output_chain_name.as_str(), cgroup_guard, args.redirect_dns)?) }
+        "redirect" => {
+            let output_chain_name = format!("nozomi_redirect_out_{}", pid);
+            Box::new(RedirectGuard::new(port, output_chain_name.as_str(), cgroup_guard, args.redirect_dns)?) }
         "tproxy" => {
+            let output_chain_name = format!("nozomi_tproxy_out_{}", pid);
             let prerouting_chain_name = format!("nozomi_tproxy_pre_{}", pid);
             let mark = pid;
             Box::new(
@@ -65,7 +67,8 @@ fn proxy_new_command(args: &Cli) -> anyhow::Result<()> {
             )
         }
         "trace" => {
-            let prerouting_chain_name = format!("nozomi_tproxy_pre_{}", pid);
+            let prerouting_chain_name = format!("nozomi_trace_pre_{}", pid);
+            let output_chain_name = format!("nozomi_trace_out_{}", pid);
             Box::new(TraceGuard::new(
                 output_chain_name.as_str(),
                 prerouting_chain_name.as_str(),

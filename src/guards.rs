@@ -8,6 +8,7 @@ pub struct CGroupGuard {
     pub cg: Cgroup,
     pub cg_path: String,
     pub class_id: u32,
+    pub hier_v2: bool,
 }
 
 impl CGroupGuard {
@@ -15,6 +16,7 @@ impl CGroupGuard {
         pid: u32,
     ) -> anyhow::Result<Self> {
         let hier = cgroups_rs::hierarchies::auto();
+        let hier_v2 = hier.v2();
         let class_id = pid;
         let cg_path = format!("cproxy-{}", pid);
         let cg: Cgroup = CgroupBuilder::new(cg_path.as_str())
@@ -23,6 +25,7 @@ impl CGroupGuard {
         cg.add_task(CgroupPid::from(pid as u64)).unwrap();
         Ok(Self {
             pid,
+            hier_v2,
             cg,
             cg_path,
             class_id,
@@ -62,15 +65,26 @@ impl RedirectGuard {
         iptables -t nat -A OUTPUT -j ${output_chain_name};
         iptables -t nat -A ${output_chain_name} -p udp -o lo -j RETURN;
         iptables -t nat -A ${output_chain_name} -p tcp -o lo -j RETURN;
-        iptables -t nat -A ${output_chain_name} -p tcp -m cgroup --cgroup ${class_id} -j REDIRECT --to-ports ${port};
-        iptables -t nat -A ${output_chain_name} -p tcp -m cgroup --path ${cgroup_path} -j REDIRECT --to-ports ${port};
         })?;
 
-        if redirect_dns {
+        if cgroup_guard.hier_v2 {
             (cmd_lib::run_cmd! {
-            iptables -t nat -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} --dport 53 -j REDIRECT --to-ports ${port};
-            iptables -t nat -A ${output_chain_name} -p udp -m cgroup --path ${cgroup_path} --dport 53 -j REDIRECT --to-ports ${port};
+                iptables -t nat -A ${output_chain_name} -p tcp -m cgroup --path ${cgroup_path} -j REDIRECT --to-ports ${port};
             })?;
+            if redirect_dns {
+                (cmd_lib::run_cmd! {
+                    iptables -t nat -A ${output_chain_name} -p udp -m cgroup --path ${cgroup_path} --dport 53 -j REDIRECT --to-ports ${port};
+                })?;
+            }
+        } else {
+            (cmd_lib::run_cmd! {
+                iptables -t nat -A ${output_chain_name} -p tcp -m cgroup --cgroup ${class_id} -j REDIRECT --to-ports ${port};
+            })?;
+            if redirect_dns {
+                (cmd_lib::run_cmd! {
+                    iptables -t nat -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} --dport 53 -j REDIRECT --to-ports ${port};
+                })?;
+            }
         }
 
         Ok(Self {
@@ -186,21 +200,38 @@ impl TProxyGuard {
         iptables -t mangle -A OUTPUT -j ${output_chain_name};
         iptables -t mangle -A ${output_chain_name} -p tcp -o lo -j RETURN;
         iptables -t mangle -A ${output_chain_name} -p udp -o lo -j RETURN;
-        iptables -t mangle -A ${output_chain_name} -p tcp -m cgroup --cgroup ${class_id} -j MARK --set-mark ${mark};
-        iptables -t mangle -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} -j MARK --set-mark ${mark};
-        iptables -t mangle -A ${output_chain_name} -p tcp -m cgroup --path ${cg_path} -j MARK --set-mark ${mark};
-        iptables -t mangle -A ${output_chain_name} -p udp -m cgroup --path ${cg_path} -j MARK --set-mark ${mark};
         })?;
 
-        if let Some(override_dns) = &override_dns {
+        if override_dns.is_some() {
             (cmd_lib::run_cmd! {
-            iptables -t nat -N ${output_chain_name};
-            iptables -t nat -A OUTPUT -j ${output_chain_name};
-            iptables -t nat -A ${output_chain_name} -p udp -o lo -j RETURN;
-            iptables -t nat -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} --dport 53 -j DNAT --to-destination ${override_dns};
-            iptables -t nat -A ${output_chain_name} -p udp -m cgroup --path ${cg_path} --dport 53 -j DNAT --to-destination ${override_dns};
+                iptables -t nat -N ${output_chain_name};
+                iptables -t nat -A OUTPUT -j ${output_chain_name};
+                iptables -t nat -A ${output_chain_name} -p udp -o lo -j RETURN;
             })?;
         }
+
+        if cgroup_guard.hier_v2 {
+            (cmd_lib::run_cmd! {
+                iptables -t mangle -A ${output_chain_name} -p tcp -m cgroup --path ${cg_path} -j MARK --set-mark ${mark};
+                iptables -t mangle -A ${output_chain_name} -p udp -m cgroup --path ${cg_path} -j MARK --set-mark ${mark};
+            })?;
+            if let Some(override_dns) = &override_dns {
+                (cmd_lib::run_cmd! {
+                    iptables -t nat -A ${output_chain_name} -p udp -m cgroup --path ${cg_path} --dport 53 -j DNAT --to-destination ${override_dns};
+                })?;
+            }
+        } else {
+            (cmd_lib::run_cmd! {
+                iptables -t mangle -A ${output_chain_name} -p tcp -m cgroup --cgroup ${class_id} -j MARK --set-mark ${mark};
+                iptables -t mangle -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} -j MARK --set-mark ${mark};
+            })?;
+            if let Some(override_dns) = &override_dns {
+                (cmd_lib::run_cmd! {
+                    iptables -t nat -A ${output_chain_name} -p udp -m cgroup --cgroup ${class_id} --dport 53 -j DNAT --to-destination ${override_dns};
+                })?;
+            }
+        }
+
 
         Ok(Self {
             port,

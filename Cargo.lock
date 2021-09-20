@@ -123,9 +123,9 @@ dependencies = [
 
 [[package]]
 name = "cmd_lib"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7114bcaf989b09f9fb057b7d7c81491bc1558e8a67bd49bf7f682318d8a6501"
+checksum = "143ac696d57849555968a7da8a5d2e1496bb15fed58621ced3d5841462dcdc47"
 dependencies = [
  "cmd_lib_macros",
  "faccess",
@@ -136,9 +136,9 @@ dependencies = [
 
 [[package]]
 name = "cmd_lib_macros"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "356fd654e9a433e730a826d4e01ea2414ab122ca8a5374eadf6c43a6090f8dd3"
+checksum = "2d540707e7b51c129a21dbaad57cad566257f0a9f71cfeb372e3955d4393e0d8"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",

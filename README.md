@@ -9,7 +9,7 @@
 proxy.
 
 What you can achieve with `cproxy`: All the things listed on for
-example [V2Ray Guide](https://guide.v2fly.org/en_US/app/app.html), including advanced configurations like reverse porxy
+example [V2Ray Guide](https://guide.v2fly.org/en_US/app/app.html), including advanced configurations like reverse proxy
 for NAT traversal, and you can **apply different proxy on different applications**.
 
 Compared to many existing complicated transparent proxy setup, `cproxy` usage is as easy as `proxychains`, but

@@ -824,6 +824,6 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 
 [[package]]
 name = "with_drop"
-version = "0.0.1"
+version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9e4f57b1e0ef76883e7ea5188777257e20c0d4b63ee78d6b3c44af7a7a8373d"
+checksum = "9b11d7ac84ce89d5aeaf2fd53f132f5cc067b697840e742978d8aee3a1a2a9e8"

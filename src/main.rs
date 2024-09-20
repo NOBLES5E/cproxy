@@ -1,5 +1,6 @@
 #![allow(dyn_drop)]
 
+use std::os::unix::prelude::CommandExt;
 use crate::guards::TraceGuard;
 use eyre::Result;
 use guards::{CGroupGuard, RedirectGuard, TProxyGuard};
@@ -85,16 +86,26 @@ fn proxy_new_command(args: &Cli) -> Result<()> {
         }
     };
 
+    let sudo_uid = std::env::var("SUDO_UID").ok();
+    let sudo_gid = std::env::var("SUDO_GID").ok();
+    let sudo_home = std::env::var("SUDO_HOME").ok();
+
     let original_uid = nix::unistd::getuid();
     let original_gid = nix::unistd::getgid();
+    let mut command = std::process::Command::new(&child_command[0]);
+    if let Some(sudo_uid) = sudo_uid {
+        command.uid(sudo_uid.parse().expect("invalid uid"));
+    }
+    if let Some(sudo_gid) = sudo_gid {
+        command.gid(sudo_gid.parse().expect("invalid gid"));
+    }
+    command.env("CPROXY_ENV", format!("cproxy/{}", port));
+    if let Some(sudo_home) = sudo_home {
+        command.env("HOME", sudo_home);
+    }
+    let mut child = command.args(&child_command[1..]).spawn()?;
     nix::unistd::seteuid(original_uid)?;
     nix::unistd::setegid(original_gid)?;
-    let mut child = std::process::Command::new(&child_command[0])
-        .env("CPROXY_ENV", format!("cproxy/{}", port))
-        .args(&child_command[1..])
-        .spawn()?;
-    nix::unistd::seteuid(nix::unistd::Uid::from_raw(0))?;
-    nix::unistd::setegid(nix::unistd::Gid::from_raw(0))?;
 
     ctrlc::set_handler(move || {
         println!("received ctrl-c, terminating...");

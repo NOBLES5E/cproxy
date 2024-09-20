@@ -29,6 +29,12 @@ install with `cargo`:
 cargo install cproxy
 ```
 
+Here's a oneliner that downloads the latest release and put it in your `/usr/local/bin/`:
+
+```
+curl -s https://api.github.com/repos/NOBLES5E/cproxy/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-musl.zip" | cut -d : -f 2,3 | tr -d \" | wget -qi - -O /tmp/cproxy.zip && unzip -j /tmp/cproxy.zip cproxy -d /tmp && sudo mv /tmp/cproxy /usr/local/bin/ && sudo chmod +x /usr/local/bin/cproxy && rm /tmp/cproxy.zip
+```
+
 ## Usage
 
 ### Simple usage: just like `proxychains`

@@ -23,7 +23,8 @@ impl CGroupGuard {
             .class_id(class_id as u64)
             .done()
             .build(hier)?;
-        cg.add_task(CgroupPid::from(pid as u64)).unwrap();
+        cg.add_task_by_tgid(CgroupPid::from(pid as u64))
+            .expect("add task failed");
         Ok(Self {
             pid,
             hier_v2,
@@ -36,10 +37,14 @@ impl CGroupGuard {
 
 impl Drop for CGroupGuard {
     fn drop(&mut self) {
-        for t in self.cg.tasks() {
+        for t in self.cg.procs() {
             let t_dbg_string = format!("{:?}", t);
-            if let Err(e) = self.cg.remove_task(t) {
-                tracing::error!("failed to remove task {}: {}", t_dbg_string, e);
+            if let Err(e) = self.cg.remove_task_by_tgid(t) {
+                tracing::error!(
+                    "failed to remove process from cgroup. pid: {}. error: {}",
+                    t_dbg_string,
+                    e
+                );
             }
         }
         self.cg.delete().unwrap();
@@ -140,7 +145,7 @@ impl IpRuleGuard {
             .expect("set routing rules failed");
             loop {
                 if (cmd_lib::run_fun! { ip rule list fwmark ${fwmark} })
-                    .unwrap()
+                    .expect("get routing rules failed")
                     .is_empty()
                 {
                     tracing::warn!("detected disappearing routing policy, possibly due to interruped network, resetting");

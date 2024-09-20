@@ -50,7 +50,7 @@ fn proxy_new_command(args: &Cli) -> Result<()> {
     let cgroup_guard = CGroupGuard::new(pid)?;
     let _guard: Box<dyn Drop> = match args.mode.as_str() {
         "redirect" => {
-            let output_chain_name = format!("nozomi_redirect_out_{}", pid);
+            let output_chain_name = format!("cproxy_redirect_out_{}", pid);
             Box::new(RedirectGuard::new(
                 port,
                 output_chain_name.as_str(),
@@ -59,8 +59,8 @@ fn proxy_new_command(args: &Cli) -> Result<()> {
             )?)
         }
         "tproxy" => {
-            let output_chain_name = format!("nozomi_tproxy_out_{}", pid);
-            let prerouting_chain_name = format!("nozomi_tproxy_pre_{}", pid);
+            let output_chain_name = format!("cproxy_tproxy_out_{}", pid);
+            let prerouting_chain_name = format!("cproxy_tproxy_pre_{}", pid);
             let mark = pid;
             Box::new(TProxyGuard::new(
                 port,
@@ -72,8 +72,8 @@ fn proxy_new_command(args: &Cli) -> Result<()> {
             )?)
         }
         "trace" => {
-            let prerouting_chain_name = format!("nozomi_trace_pre_{}", pid);
-            let output_chain_name = format!("nozomi_trace_out_{}", pid);
+            let prerouting_chain_name = format!("cproxy_trace_pre_{}", pid);
+            let output_chain_name = format!("cproxy_trace_out_{}", pid);
             Box::new(TraceGuard::new(
                 output_chain_name.as_str(),
                 prerouting_chain_name.as_str(),
@@ -111,7 +111,7 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> Result<()> {
     let cgroup_guard = CGroupGuard::new(pid)?;
     let _guard: Box<dyn Drop> = match args.mode.as_str() {
         "redirect" => {
-            let output_chain_name = format!("nozomi_redirect_out_{}", pid);
+            let output_chain_name = format!("cproxy_redirect_out_{}", pid);
             Box::new(RedirectGuard::new(
                 port,
                 output_chain_name.as_str(),
@@ -120,8 +120,8 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> Result<()> {
             )?)
         }
         "tproxy" => {
-            let output_chain_name = format!("nozomi_tproxy_out_{}", pid);
-            let prerouting_chain_name = format!("nozomi_tproxy_pre_{}", pid);
+            let output_chain_name = format!("cproxy_tproxy_out_{}", pid);
+            let prerouting_chain_name = format!("cproxy_tproxy_pre_{}", pid);
             let mark = pid;
             Box::new(TProxyGuard::new(
                 port,
@@ -133,8 +133,8 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> Result<()> {
             )?)
         }
         "trace" => {
-            let prerouting_chain_name = format!("nozomi_trace_pre_{}", pid);
-            let output_chain_name = format!("nozomi_trace_out_{}", pid);
+            let prerouting_chain_name = format!("cproxy_trace_pre_{}", pid);
+            let output_chain_name = format!("cproxy_trace_out_{}", pid);
             Box::new(TraceGuard::new(
                 output_chain_name.as_str(),
                 prerouting_chain_name.as_str(),
@@ -164,7 +164,7 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> Result<()> {
 fn main() -> Result<()> {
     color_eyre::install()?;
     tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_env("LOG_LEVEL"))
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
     nix::unistd::seteuid(nix::unistd::Uid::from_raw(0)).expect(
         "cproxy failed to seteuid, please `chown root:root` and `chmod +s` on cproxy binary",

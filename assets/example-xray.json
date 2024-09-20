@@ -1,0 +1,37 @@
+{
+  "log": {
+    "loglevel": "debug"
+  },
+  "routing": {
+    "domainStrategy": "IPIfNonMatch"
+  },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 59999,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "followRedirect": true,
+        "network": "tcp,udp"
+      },
+      "sniffing": {
+        "destOverride": [
+          "http",
+          "tls"
+        ],
+        "enabled": true,
+        "streamSettings": {
+          "sockopt": {
+            "tproxy": "tproxy"
+          }
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    }
+  ]
+}

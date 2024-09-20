@@ -22,7 +22,7 @@ Ever wished you could make your stubborn programs use a proxy without them even 
 - No background daemon required
 - Easy integration with existing software like V2Ray, Xray, and Shadowsocks
 
-> [!NOTE]
+> [!TIP]
 > Your proxy should be a transparent proxy port (like V2Ray's `dokodemo-door` inbound or shadowsocks `ss-redir`). But don't panic if you only have a SOCKS5 or HTTP proxy! There are tools that can transform it [faster than Bill Clinton](https://youtu.be/Dv0PxINy2ds?t=570) (check out [transocks](https://github.com/cybozu-go/transocks), [ipt2socks](https://github.com/zfl9/ipt2socks) and [ip2socks-go](https://github.com/lcdbin/ip2socks-go)).
 
 ## Installation

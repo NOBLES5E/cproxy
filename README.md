@@ -5,35 +5,31 @@
 
 [![Crates.io](https://img.shields.io/crates/v/cproxy)](https://crates.io/crates/cproxy) [![CI](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml/badge.svg)](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml) ![Crates.io](https://img.shields.io/crates/d/cproxy) ![Crates.io](https://img.shields.io/crates/l/cproxy)
 
-`cproxy` can redirect TCP and UDP traffic made by a program to a proxy, without requiring the program itself supporting a proxy.
+Ever wished you could make your stubborn programs use a proxy without them even knowing? Well, say hello to `cproxy`.
 
 ## Key Features
 
-* Redirects TCP and UDP traffic to a proxy without requiring program modifications
-* Allows applying different proxies to different applications / processes
-* Works with any program, including static linked Go programs
-* Redirects DNS requests
-* Simple usage similar to `proxychains`
-* Can proxy existing running processes
-* Supports both iptables `REDIRECT` and `TPROXY` modes
-* Ability to override DNS server address in `TPROXY` mode
-* Can trace network activity of a program using iptables `LOG` target
-* Works with both cgroup v1 and v2
-* No background daemon process required
-* Lightweight and easy to set up compared to complex transparent proxy configurations
-* Easy to integrate with tools like [V2Ray](https://github.com/v2fly/v2ray-core), [Xray](https://github.com/XTLS/Xray-core), and [Shadowsocks](https://github.com/shadowsocks/shadowsocks-libev)
-  * Note: The proxy used by `cproxy` should be a transparent proxy port (such as V2Ray's `dokodemo-door` inbound and shadowsocks `ss-redir`). A good news is that even if you only have a SOCKS5 or HTTP proxy, there are tools that can convert it to a transparent proxy for you (for example, [transocks](https://github.com/cybozu-go/transocks), [ipt2socks](https://github.com/zfl9/ipt2socks) and [ip2socks-go](https://github.com/lcdbin/ip2socks-go)).
+- Transparent redirection of TCP and UDP traffic
+- Support for different proxies per application/process
+- Compatible with all programs, including statically linked Go binaries
+- DNS request redirection
+- Simple usage similar to `proxychains`
+- Ability to proxy existing running processes
+- Support for both iptables `REDIRECT` and `TPROXY` modes
+- DNS server override in `TPROXY` mode
+- Network activity tracing using iptables `LOG` target
+- Compatible with cgroup v1 and v2
+- No background daemon required
+- Easy integration with existing software like V2Ray, Xray, and Shadowsocks
+
+> [!NOTE]
+> Your proxy should be a transparent proxy port (like V2Ray's `dokodemo-door` inbound or shadowsocks `ss-redir`). But don't panic if you only have a SOCKS5 or HTTP proxy! There are tools that can transform it [faster than Bill Clinton](https://youtu.be/Dv0PxINy2ds?t=570) (check out [transocks](https://github.com/cybozu-go/transocks), [ipt2socks](https://github.com/zfl9/ipt2socks) and [ip2socks-go](https://github.com/lcdbin/ip2socks-go)).
 
 ## Installation
 
-You can install by downloading the binary from the [release page](https://github.com/NOBLES5E/cproxy/releases) or
-install with `cargo`:
+You can install by downloading the binary from the [release page](https://github.com/NOBLES5E/cproxy/releases) or install with: `cargo install cproxy`.
 
-```
-cargo install cproxy
-```
-
-Here's a oneliner that downloads the latest release and put it in your `/usr/local/bin/`:
+Alternatively, here's a oneliner that downloads the latest release and put it in your `/usr/local/bin/` (for the lazy... I mean, efficient folks):
 
 ```
 curl -s https://api.github.com/repos/NOBLES5E/cproxy/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-musl.zip" | cut -d : -f 2,3 | tr -d \" | wget -qi - -O /tmp/cproxy.zip && unzip -j /tmp/cproxy.zip cproxy -d /tmp && sudo mv /tmp/cproxy /usr/local/bin/ && sudo chmod +x /usr/local/bin/cproxy && rm /tmp/cproxy.zip
@@ -41,7 +37,7 @@ curl -s https://api.github.com/repos/NOBLES5E/cproxy/releases/latest | grep "bro
 
 ## Usage
 
-### Simple usage: just like `proxychains`
+### Basic Magic Trick: just like `proxychains`
 
 You can launch a new program with `cproxy` with:
 
@@ -58,7 +54,7 @@ sudo cproxy --port <destination-local-port> --redirect-dns -- <your-program> --a
 
 For an example setup, see [wiki](https://github.com/NOBLES5E/cproxy/wiki/Example-setup-with-V2Ray).
 
-### Simple usage: use iptables tproxy
+### The TPROXY Twist
 
 If your system support `tproxy`, you can use `tproxy` with `--mode tproxy`:
 
@@ -103,9 +99,9 @@ sudo cproxy --mode trace <your-program>
 
 You will be able to see log in `dmesg`. Note that this requires a recent enough kernel and iptables.
 
-## How does it work?
+## The Secret Sauce
 
-`cproxy` creates a unique `cgroup` for the proxied program, and redirect its traffic with packet rules.
+`cproxy` simply creates a unique `cgroup` for the proxied program, and redirect its traffic with packet rules.
 
 ## Limitations
 

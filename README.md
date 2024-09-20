@@ -54,6 +54,9 @@ sudo cproxy --port <destination-local-port> --redirect-dns -- <your-program> --a
 
 For an example setup, see [wiki](https://github.com/NOBLES5E/cproxy/wiki/Example-setup-with-V2Ray).
 
+> [!NOTE]
+> Scared of `sudo` in the command? Well, that's what we need to have the permission to modify cgroup. But don't worry too much, the program you run will still be run under your original user, not as root. `cproxy` automatically drops privileges after setting up the necessary cgroup configurations, ensuring that your program runs with the same permissions as if you had launched it directly.
+
 ### The TPROXY Twist
 
 If your system support `tproxy`, you can use `tproxy` with `--mode tproxy`:

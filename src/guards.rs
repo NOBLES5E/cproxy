@@ -1,8 +1,8 @@
-use std::time::Duration;
-use cgroups_rs::{Cgroup, CgroupPid};
 use cgroups_rs::cgroup_builder::CgroupBuilder;
+use cgroups_rs::{Cgroup, CgroupPid};
+use std::time::Duration;
 
-#[allow(unused_variables)]
+#[allow(unused)]
 pub struct CGroupGuard {
     pub pid: u32,
     pub cg: Cgroup,
@@ -12,15 +12,15 @@ pub struct CGroupGuard {
 }
 
 impl CGroupGuard {
-    pub fn new(
-        pid: u32,
-    ) -> anyhow::Result<Self> {
+    pub fn new(pid: u32) -> anyhow::Result<Self> {
         let hier = cgroups_rs::hierarchies::auto();
         let hier_v2 = hier.v2();
         let class_id = pid;
         let cg_path = format!("cproxy-{}", pid);
         let cg: Cgroup = CgroupBuilder::new(cg_path.as_str())
-            .network().class_id(class_id as u64).done()
+            .network()
+            .class_id(class_id as u64)
+            .done()
             .build(hier);
         cg.add_task(CgroupPid::from(pid as u64)).unwrap();
         Ok(Self {
@@ -57,7 +57,11 @@ impl RedirectGuard {
         cgroup_guard: CGroupGuard,
         redirect_dns: bool,
     ) -> anyhow::Result<Self> {
-        tracing::debug!("creating redirect guard on port {}, with redirect_dns: {}", port, redirect_dns);
+        tracing::debug!(
+            "creating redirect guard on port {}, with redirect_dns: {}",
+            port,
+            redirect_dns
+        );
         let class_id = cgroup_guard.class_id;
         let cgroup_path = cgroup_guard.cg_path.as_str();
         (cmd_lib::run_cmd! {
@@ -105,7 +109,7 @@ impl Drop for RedirectGuard {
           iptables -t nat -F ${output_chain_name};
           iptables -t nat -X ${output_chain_name};
         })
-            .expect("drop iptables and cgroup failed");
+        .expect("drop iptables and cgroup failed");
     }
 }
 
@@ -128,13 +132,18 @@ impl IpRuleGuard {
             (cmd_lib::run_cmd! {
               ip rule add fwmark ${fwmark} table ${table};
               ip route add local 0.0.0.0/0 dev lo table ${table};
-            }).expect("set routing rules failed");
+            })
+            .expect("set routing rules failed");
             loop {
-                if (cmd_lib::run_fun! { ip rule list fwmark ${fwmark} }).unwrap().is_empty() {
+                if (cmd_lib::run_fun! { ip rule list fwmark ${fwmark} })
+                    .unwrap()
+                    .is_empty()
+                {
                     tracing::warn!("detected disappearing routing policy, possibly due to interruped network, resetting");
                     (cmd_lib::run_cmd! {
                       ip rule add fwmark ${fwmark} table ${table};
-                    }).expect("set routing rules failed");
+                    })
+                    .expect("set routing rules failed");
                 }
                 if receiver.recv_timeout(Duration::from_secs(1)).is_ok() {
                     break;
@@ -155,10 +164,11 @@ impl IpRuleGuard {
             (cmd_lib::run_cmd! {
                 ip rule delete fwmark ${mark} table ${table};
                 ip route delete local 0.0.0.0/0 dev lo table ${table};
-            }).expect("drop routing rules failed");
+            })
+            .expect("drop routing rules failed");
         });
         Self {
-            inner: Box::new(inner)
+            inner: Box::new(inner),
         }
     }
 }
@@ -185,7 +195,11 @@ impl TProxyGuard {
     ) -> anyhow::Result<Self> {
         let class_id = cgroup_guard.class_id;
         let cg_path = cgroup_guard.cg_path.as_str();
-        tracing::debug!("creating tproxy guard on port {}, with override_dns: {:?}", port, override_dns);
+        tracing::debug!(
+            "creating tproxy guard on port {}, with override_dns: {:?}",
+            port,
+            override_dns
+        );
         let iprule_guard = IpRuleGuard::new(mark, mark);
         (cmd_lib::run_cmd! {
 
@@ -232,7 +246,6 @@ impl TProxyGuard {
             }
         }
 
-
         Ok(Self {
             port,
             mark,
@@ -261,14 +274,15 @@ impl Drop for TProxyGuard {
             iptables -t mangle -F ${output_chain_name};
             iptables -t mangle -X ${output_chain_name};
         })
-            .expect("drop iptables and cgroup failed");
+        .expect("drop iptables and cgroup failed");
 
         if self.override_dns.is_some() {
             (cmd_lib::run_cmd! {
             iptables -t nat -D OUTPUT -j ${output_chain_name};
             iptables -t nat -F ${output_chain_name};
             iptables -t nat -X ${output_chain_name};
-            }).expect("drop iptables failed");
+            })
+            .expect("drop iptables failed");
         }
     }
 }
@@ -310,7 +324,7 @@ impl TraceGuard {
 impl Drop for TraceGuard {
     fn drop(&mut self) {
         let output_chain_name = &self.output_chain_name;
-        let prerouting_chain_name = &self.prerouting_chain_name;
+        let _prerouting_chain_name = &self.prerouting_chain_name;
 
         std::thread::sleep(Duration::from_millis(100));
 
@@ -323,6 +337,6 @@ impl Drop for TraceGuard {
             iptables -t raw -F ${output_chain_name};
             iptables -t raw -X ${output_chain_name};
         })
-            .expect("drop iptables and cgroup failed");
+        .expect("drop iptables and cgroup failed");
     }
 }

@@ -1,9 +1,9 @@
 #![allow(dyn_drop)]
 
-use std::os::unix::prelude::CommandExt;
 use crate::guards::TraceGuard;
 use eyre::Result;
 use guards::{CGroupGuard, RedirectGuard, TProxyGuard};
+use std::os::unix::prelude::CommandExt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -177,12 +177,10 @@ fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
-    nix::unistd::seteuid(nix::unistd::Uid::from_raw(0)).expect(
-        "cproxy failed to seteuid, please `chown root:root` and `chmod +s` on cproxy binary",
-    );
-    nix::unistd::setegid(nix::unistd::Gid::from_raw(0)).expect(
-        "cproxy failed to seteuid, please `chown root:root` and `chmod +s` on cproxy binary",
-    );
+    nix::unistd::seteuid(nix::unistd::Uid::from_raw(0))
+        .expect("cproxy failed to seteuid, please run as root");
+    nix::unistd::setegid(nix::unistd::Gid::from_raw(0))
+        .expect("cproxy failed to seteuid, please run as root");
     let args: Cli = Cli::from_args();
 
     match args.pid {

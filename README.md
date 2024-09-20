@@ -27,7 +27,6 @@ install with `cargo`:
 
 ```
 cargo install cproxy
-chown root:root $(which cproxy) && chmod +s $(which cproxy)
 ```
 
 ## Usage
@@ -37,14 +36,14 @@ chown root:root $(which cproxy) && chmod +s $(which cproxy)
 You can launch a new program with `cproxy` with:
 
 ```
-cproxy --port <destination-local-port> -- <your-program> --arg1 --arg2 ...
+sudo cproxy --port <destination-local-port> -- <your-program> --arg1 --arg2 ...
 ```
 
 All TCP connections requests will be proxied. If your local transparent proxy support DNS address overriding, you can
 also redirect DNS traffic with `--redirect-dns`:
 
 ```
-cproxy --port <destination-local-port> --redirect-dns -- <your-program> --arg1 --arg2 ...
+sudo cproxy --port <destination-local-port> --redirect-dns -- <your-program> --arg1 --arg2 ...
 ```
 
 For an example setup, see [wiki](https://github.com/NOBLES5E/cproxy/wiki/Example-setup-with-V2Ray).
@@ -54,9 +53,9 @@ For an example setup, see [wiki](https://github.com/NOBLES5E/cproxy/wiki/Example
 If your system support `tproxy`, you can use `tproxy` with `--mode tproxy`:
 
 ```bash
-cproxy --port <destination-local-port> --mode tproxy -- <your-program> --arg1 --arg2 ...
+sudo cproxy --port <destination-local-port> --mode tproxy -- <your-program> --arg1 --arg2 ...
 # or for existing process
-cproxy --port <destination-local-port> --mode tproxy --pid <existing-process-pid>
+sudo cproxy --port <destination-local-port> --mode tproxy --pid <existing-process-pid>
 ```
 
 With `--mode tproxy`, there are several differences:
@@ -79,7 +78,7 @@ With `cproxy`, you can even proxy an existing process. This is very handy when y
 services such as `docker`. To do this, just run
 
 ```
-cproxy --port <destination-local-port> --pid <existing-process-pid>
+sudo cproxy --port <destination-local-port> --pid <existing-process-pid>
 ```
 
 The target process will be proxied as long as this `cproxy` command is running. You can press Ctrl-C to stop proxying.
@@ -89,7 +88,7 @@ The target process will be proxied as long as this `cproxy` command is running. 
 With `cproxy`, you can easily debug a program's traffic in netfilter. Just run the program with
 
 ```bash
-cproxy --mode trace <your-program>
+sudo cproxy --mode trace <your-program>
 ```
 
 You will be able to see log in `dmesg`. Note that this requires a recent enough kernel and iptables.

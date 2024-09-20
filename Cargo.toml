@@ -14,7 +14,7 @@ color-eyre = "0.6"
 ctrlc = "3.4"
 eyre = "0.6"
 flume = "0.11"
-nix = "0.26"
+nix = { version = "0.29", features = ["user"] }
 structopt = "0.3"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

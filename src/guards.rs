@@ -1,5 +1,6 @@
 use cgroups_rs::cgroup_builder::CgroupBuilder;
 use cgroups_rs::{Cgroup, CgroupPid};
+use eyre::Result;
 use std::time::Duration;
 
 #[allow(unused)]
@@ -12,7 +13,7 @@ pub struct CGroupGuard {
 }
 
 impl CGroupGuard {
-    pub fn new(pid: u32) -> anyhow::Result<Self> {
+    pub fn new(pid: u32) -> Result<Self> {
         let hier = cgroups_rs::hierarchies::auto();
         let hier_v2 = hier.v2();
         let class_id = pid;
@@ -56,7 +57,7 @@ impl RedirectGuard {
         output_chain_name: &str,
         cgroup_guard: CGroupGuard,
         redirect_dns: bool,
-    ) -> anyhow::Result<Self> {
+    ) -> Result<Self> {
         tracing::debug!(
             "creating redirect guard on port {}, with redirect_dns: {}",
             port,
@@ -192,7 +193,7 @@ impl TProxyGuard {
         prerouting_chain_name: &str,
         cgroup_guard: CGroupGuard,
         override_dns: Option<String>,
-    ) -> anyhow::Result<Self> {
+    ) -> Result<Self> {
         let class_id = cgroup_guard.class_id;
         let cg_path = cgroup_guard.cg_path.as_str();
         tracing::debug!(
@@ -299,7 +300,7 @@ impl TraceGuard {
         output_chain_name: &str,
         prerouting_chain_name: &str,
         cgroup_guard: CGroupGuard,
-    ) -> anyhow::Result<Self> {
+    ) -> Result<Self> {
         let class_id = cgroup_guard.class_id;
         (cmd_lib::run_cmd! {
         // iptables -t raw -N ${prerouting_chain_name};

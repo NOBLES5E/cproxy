@@ -1,13 +1,12 @@
 #![allow(dyn_drop)]
 
+use crate::guards::TraceGuard;
+use eyre::Result;
+use guards::{CGroupGuard, RedirectGuard, TProxyGuard};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
-
 use structopt::StructOpt;
-
-use crate::guards::TraceGuard;
-use guards::{CGroupGuard, RedirectGuard, TProxyGuard};
 
 mod guards;
 
@@ -38,7 +37,7 @@ enum ChildCommand {
     Command(Vec<String>),
 }
 
-fn proxy_new_command(args: &Cli) -> anyhow::Result<()> {
+fn proxy_new_command(args: &Cli) -> Result<()> {
     let pid = std::process::id();
     let ChildCommand::Command(child_command) = &args
         .command
@@ -106,7 +105,7 @@ fn proxy_new_command(args: &Cli) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn proxy_existing_pid(pid: u32, args: &Cli) -> anyhow::Result<()> {
+fn proxy_existing_pid(pid: u32, args: &Cli) -> Result<()> {
     let port = args.port;
 
     let cgroup_guard = CGroupGuard::new(pid)?;
@@ -162,7 +161,8 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<()> {
+    color_eyre::install()?;
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_env("LOG_LEVEL"))
         .init();

@@ -5,20 +5,24 @@
 
 [![Crates.io](https://img.shields.io/crates/v/cproxy)](https://crates.io/crates/cproxy) [![CI](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml/badge.svg)](https://github.com/NOBLES5E/cproxy/actions/workflows/build.yml) ![Crates.io](https://img.shields.io/crates/d/cproxy) ![Crates.io](https://img.shields.io/crates/l/cproxy)
 
-`cproxy` can redirect TCP and UDP traffic made by a program to a proxy, without requiring the program supporting a
-proxy.
+`cproxy` can redirect TCP and UDP traffic made by a program to a proxy, without requiring the program itself supporting a proxy.
 
-What you can achieve with `cproxy`: All the things listed on for
-example [V2Ray Guide](https://guide.v2fly.org/en_US/app/app.html), including advanced configurations like reverse proxy
-for NAT traversal, and you can **apply different proxy on different applications**.
+## Key Features
 
-Compared to many existing complicated transparent proxy setup, `cproxy` usage is as easy as `proxychains`, but
-unlike `proxychains`, it works on any program (including static linked Go programs) and redirects DNS requests.
-
-Note: The proxy used by `cproxy` should be a transparent proxy port (such as V2Ray's `dokodemo-door` inbound and
-shadowsocks `ss-redir`). A good news is that even if you only have a SOCKS5 or HTTP proxy, there are tools that can
-convert it to a transparent proxy for you (for example, [transocks](https://github.com/cybozu-go/transocks)
-, [ipt2socks](https://github.com/zfl9/ipt2socks) and [ip2socks-go](https://github.com/lcdbin/ip2socks-go)).
+* Redirects TCP and UDP traffic to a proxy without requiring program modifications
+* Allows applying different proxies to different applications / processes
+* Works with any program, including static linked Go programs
+* Redirects DNS requests
+* Simple usage similar to `proxychains`
+* Can proxy existing running processes
+* Supports both iptables `REDIRECT` and `TPROXY` modes
+* Ability to override DNS server address in `TPROXY` mode
+* Can trace network activity of a program using iptables `LOG` target
+* Works with both cgroup v1 and v2
+* No background daemon process required
+* Lightweight and easy to set up compared to complex transparent proxy configurations
+* Easy to integrate with tools like [V2Ray](https://github.com/v2fly/v2ray-core), [Xray](https://github.com/XTLS/Xray-core), and [Shadowsocks](https://github.com/shadowsocks/shadowsocks-libev)
+  * Note: The proxy used by `cproxy` should be a transparent proxy port (such as V2Ray's `dokodemo-door` inbound and shadowsocks `ss-redir`). A good news is that even if you only have a SOCKS5 or HTTP proxy, there are tools that can convert it to a transparent proxy for you (for example, [transocks](https://github.com/cybozu-go/transocks), [ipt2socks](https://github.com/zfl9/ipt2socks) and [ip2socks-go](https://github.com/lcdbin/ip2socks-go)).
 
 ## Installation
 

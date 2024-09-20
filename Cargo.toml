@@ -8,7 +8,7 @@ license = "AGPL-3.0-or-later"
 edition = "2018"
 
 [dependencies]
-cgroups-rs = "0.2"
+cgroups-rs = "0.3"
 cmd_lib = "1.9"
 color-eyre = "0.6"
 ctrlc = "3.4"

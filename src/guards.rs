@@ -22,7 +22,7 @@ impl CGroupGuard {
             .network()
             .class_id(class_id as u64)
             .done()
-            .build(hier);
+            .build(hier)?;
         cg.add_task(CgroupPid::from(pid as u64)).unwrap();
         Ok(Self {
             pid,
@@ -37,7 +37,10 @@ impl CGroupGuard {
 impl Drop for CGroupGuard {
     fn drop(&mut self) {
         for t in self.cg.tasks() {
-            self.cg.remove_task(t);
+            let t_dbg_string = format!("{:?}", t);
+            if let Err(e) = self.cg.remove_task(t) {
+                tracing::error!("failed to remove task {}: {}", t_dbg_string, e);
+            }
         }
         self.cg.delete().unwrap();
     }

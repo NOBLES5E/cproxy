@@ -37,7 +37,7 @@ curl -s https://api.github.com/repos/NOBLES5E/cproxy/releases/latest | grep "bro
 
 ## Usage
 
-### Basic Magic Trick: just like `proxychains`
+### Basic Magic Trick: Just Like `proxychains`
 
 You can launch a new program with `cproxy` with:
 
@@ -81,7 +81,7 @@ Note that when you are using the `tproxy` mode, you can override the DNS server 
 with `cproxy --mode tproxy --override-dns <your-dns-server-addr> ...`. This is useful when you want to use a different
 DNS server for a specific application.
 
-### Advanced usage: proxy an existing process
+### Advanced Usage: Proxy an Existing Process
 
 With `cproxy`, you can even proxy an existing process. This is very handy when you want to proxy existing system
 services such as `docker`. To do this, just run
@@ -92,7 +92,7 @@ sudo cproxy --port <destination-local-port> --pid <existing-process-pid>
 
 The target process will be proxied as long as this `cproxy` command is running. You can press Ctrl-C to stop proxying.
 
-### Advanced usage: debug a program's network activity with iptables LOG target
+### Advanced Usage: Debug a Program's Network Activity with Pptables LOG Target
 
 With `cproxy`, you can easily debug a program's traffic in netfilter. Just run the program with
 
@@ -111,7 +111,7 @@ You will be able to see log in `dmesg`. Note that this requires a recent enough 
 * `cproxy` requires root access to modify `cgroup`.
 * Currently only tested on Linux.
 
-## Similar projects
+## Similar Projects
 
 There are some awesome existing work:
 

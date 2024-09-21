@@ -92,7 +92,7 @@ sudo cproxy --port <destination-local-port> --pid <existing-process-pid>
 
 The target process will be proxied as long as this `cproxy` command is running. You can press Ctrl-C to stop proxying.
 
-### Advanced Usage: Debug a Program's Network Activity with Pptables LOG Target
+### Advanced Usage: Debug a Program's Network Activity with Iptables LOG Target
 
 With `cproxy`, you can easily debug a program's traffic in netfilter. Just run the program with
 

@@ -61,15 +61,15 @@ jobs:
 
       - name: Run Redirect Mode Tests
         run: |
-          ./test/test_redirect.sh
+          sudo ./test/test_redirect.sh
 
       - name: Run TProxy Mode Tests
         run: |
-          ./test/test_tproxy.sh
+          sudo ./test/test_tproxy.sh
 
       - name: Run Trace Mode Tests
         run: |
-          ./test/test_trace.sh
+          sudo ./test/test_trace.sh
 
       - name: Collect Logs on Failure
         if: failure()

@@ -23,7 +23,7 @@ wait_for_port 1080
 
 # Start cproxy in redirect mode
 echo "Starting cproxy in redirect mode on port 1080..."
-sudo ./cproxy --port 1080 --mode redirect --redirect-dns -- /bin/bash -c "sleep 30" &
+./cproxy --port 1080 --mode redirect --redirect-dns -- /bin/bash -c "sleep 30" &
 CPROXY_PID=$!
 sleep 5  # Give cproxy time to set up
 

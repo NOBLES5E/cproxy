@@ -51,6 +51,6 @@ verify_proxy() {
 # Function to install required dependencies
 install_dependencies() {
     echo "Installing required dependencies..."
-    sudo apt-get update
-    sudo apt-get install -y iptables curl python3
+    apt-get update
+    apt-get install -y iptables curl python3
 }

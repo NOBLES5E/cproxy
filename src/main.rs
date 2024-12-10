@@ -136,7 +136,7 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> Result<()> {
                 port,
                 output_chain_name.as_str(),
                 cgroup_guard,
-                !args.redirect_dns,
+                args.redirect_dns,
             )?)
         }
         "tproxy" => {

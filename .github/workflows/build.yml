@@ -58,6 +58,7 @@ jobs:
         run: |
           mkdir -p test/logs
           chmod +x test/*.sh
+          sudo install -m 755 target/release/cproxy /usr/local/bin
 
       - name: Run Redirect Mode Tests
         run: |

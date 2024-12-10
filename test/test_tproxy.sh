@@ -39,7 +39,7 @@ sleep 2
 
 # Perform a simple HTTP request to verify redirection
 echo "Performing HTTP request through TProxy..." | tee -a "$LOG_FILE"
-curl -x socks4a://localhost:$PROXY_PORT http://example.com -o /dev/null
+curl -x socks4a://localhost:$PROXY_PORT --connect-timeout 5 --max-time 10 http://example.com -o /dev/null
 if [ $? -ne 0 ]; then
     echo "HTTP request failed in TProxy mode" | tee -a "$LOG_FILE"
     exit 1

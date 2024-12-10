@@ -23,7 +23,7 @@ sleep 2
 
 # Perform a simple HTTP request to generate logs
 echo "Performing HTTP request to generate trace logs..." | tee -a "$LOG_FILE"
-curl http://example.com -o /dev/null
+curl --connect-timeout 5 --max-time 10 http://example.com -o /dev/null
 if [ $? -ne 0 ]; then
     echo "HTTP request failed in Trace mode" | tee -a "$LOG_FILE"
     exit 1

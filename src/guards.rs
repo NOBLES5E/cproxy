@@ -5,7 +5,7 @@ use std::time::Duration;
 
 #[allow(unused)]
 pub struct CGroupGuard {
-    pub pid: u32,
+    pub pid: Option<u32>,
     pub cg: Cgroup,
     pub cg_path: String,
     pub class_id: u32,
@@ -26,10 +26,36 @@ impl CGroupGuard {
         cg.add_task_by_tgid(CgroupPid::from(pid as u64))
             .expect("add task failed");
         Ok(Self {
-            pid,
+            pid: Some(pid),
             hier_v2,
             cg,
             cg_path,
+            class_id,
+        })
+    }
+
+    pub fn from_path(path: &str) -> Result<Self> {
+        let hier = cgroups_rs::hierarchies::auto();
+        let hier_v2 = hier.v2();
+        // Use path hash as class_id to avoid conflicts
+        let class_id = {
+            use std::hash::{Hash, Hasher};
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            path.hash(&mut hasher);
+            hasher.finish() as u32
+        };
+
+        let cg = CgroupBuilder::new(path)
+            .network()
+            .class_id(class_id as u64)
+            .done()
+            .build(hier)?;
+
+        Ok(Self {
+            pid: None,
+            hier_v2,
+            cg,
+            cg_path: path.to_string(),
             class_id,
         })
     }

@@ -3,9 +3,6 @@
 set -euo pipefail
 
 # Variables
-XRAY_VERSION=""
-XRAY_DOWNLOAD_URL=""
-XRAY_ARCH=""
 TEMP_DIR=""
 XRAY_PID=""
 CLOUDFLARE_DNS="1.1.1.1"

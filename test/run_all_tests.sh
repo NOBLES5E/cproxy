@@ -6,6 +6,7 @@ set -euo pipefail
 TEMP_DIR=""
 XRAY_PID=""
 CLOUDFLARE_DNS="1.1.1.1"
+export PATH=$PATH:$PWD/target/release/
 
 # Function to install xray
 install_xray() {

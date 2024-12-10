@@ -1,53 +1,35 @@
 #!/bin/bash
-set -euo pipefail
 
-LOG_DIR="test/logs"
-LOG_FILE="${LOG_DIR}/redirect.log"
+set -e
 
-echo "Starting Redirect Mode Test..." | tee "$LOG_FILE"
+source ./test/helpers.sh
 
-# Start a simple HTTP proxy server using socat
-PROXY_PORT=1080
-sudo socat TCP-LISTEN:$PROXY_PORT,fork SOCKS4A:localhost:localhost:80 > /dev/null 2>&1 &
-PROXY_PID=$!
+cleanup_iptables
 
-# Function to clean up background processes
-cleanup() {
-    echo "Cleaning up Redirect Mode Test..." | tee -a "$LOG_FILE"
-    sudo kill $PROXY_PID || true
-    kill $CPROXY_PID || true
-    sleep 2
-}
-trap cleanup EXIT
+install_dependencies
 
-# Allow some time for the proxy to start
-sleep 2
+# Start HTTP server
+HTTP_SERVER_PID=$(start_http_server)
+trap stop_http_server EXIT
 
-# Start cproxy in redirect mode with a simple command
-sudo ./target/release/cproxy --port $PROXY_PORT --mode redirect --redirect-dns -- echo "Test Redirect" > /dev/null &
+# Start a simple SOCKS5 proxy using socat
+echo "Starting SOCKS5 proxy on port 1080..."
+socat TCP-LISTEN:1080,fork SOCKS4A:localhost:127.0.0.1:8080,socksport=1080 > /dev/null 2>&1 &
+SOCKS_PROXY_PID=$!
+trap "kill $SOCKS_PROXY_PID && stop_http_server" EXIT
+
+# Verify proxy is listening
+wait_for_port 1080
+
+# Start cproxy in redirect mode
+echo "Starting cproxy in redirect mode on port 1080..."
+sudo ./cproxy --port 1080 --mode redirect --redirect-dns -- /bin/bash -c "sleep 30" &
 CPROXY_PID=$!
+sleep 5  # Give cproxy time to set up
 
-# Allow some time for cproxy to set up iptables
-sleep 2
+# Verify proxy functionality
+verify_proxy 1080
 
-# Perform a simple HTTP request to verify redirection
-echo "Performing HTTP request through redirect proxy..." | tee -a "$LOG_FILE"
-curl -x socks4a://localhost:$PROXY_PORT --connect-timeout 5 --max-time 10 http://example.com -o /dev/null
-if [ $? -ne 0 ]; then
-    echo "HTTP request failed in Redirect mode" | tee -a "$LOG_FILE"
-    exit 1
-fi
-
-# Perform a DNS request to verify DNS redirection
-echo "Performing DNS request through redirect proxy..." | tee -a "$LOG_FILE"
-dig @127.0.0.1 -p $PROXY_PORT example.com > "${LOG_DIR}/redirect_dns.log" 2>&1
-
-# Verify DNS response
-if grep -q "NOERROR" "${LOG_DIR}/redirect_dns.log"; then
-    echo "DNS request successfully redirected in Redirect mode" | tee -a "$LOG_FILE"
-else
-    echo "DNS request failed in Redirect mode" | tee -a "$LOG_FILE"
-    exit 1
-fi
-
-echo "Redirect Mode Test Passed" | tee -a "$LOG_FILE"
+# Cleanup
+echo "Tests passed. Cleaning up..."
+kill "$CPROXY_PID" || true

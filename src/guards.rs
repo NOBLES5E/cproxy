@@ -73,7 +73,9 @@ impl Drop for CGroupGuard {
                 );
             }
         }
-        self.cg.delete().unwrap();
+        if let Err(e) = self.cg.delete() {
+            tracing::warn!("failed to delete cgroup. error: {}", e)
+        }
     }
 }
 

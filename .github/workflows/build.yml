@@ -1,10 +1,9 @@
 on: [push, pull_request]
 
-name: CI
+name: check and test
 
 jobs:
-  check:
-    name: Check
+  cargo-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -17,8 +16,7 @@ jobs:
         with:
           command: check
 
-  test:
-    name: Test Suite
+  cargo-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -30,3 +28,54 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+
+  e2e-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions/setup-rust@v1
+        with:
+          rust-version: stable
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iptables iproute2 socat curl dnsutils
+
+      - name: Build cproxy
+        run: |
+          cargo build --release
+
+      - name: Prepare Test Environment
+        run: |
+          mkdir -p test/logs
+          chmod +x test/*.sh
+
+      - name: Run Redirect Mode Tests
+        run: |
+          ./test/test_redirect.sh
+
+      - name: Run TProxy Mode Tests
+        run: |
+          ./test/test_tproxy.sh
+
+      - name: Run Trace Mode Tests
+        run: |
+          ./test/test_trace.sh
+
+      - name: Collect Logs on Failure
+        if: failure()
+        run: |
+          tar -czf test_logs.tar.gz test/logs/
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: test-logs
+          path: test_logs.tar.gz

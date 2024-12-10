@@ -13,57 +13,7 @@ CLOUDFLARE_DNS="1.1.1.1"
 # Function to install xray
 install_xray() {
     echo "Installing xray..."
-
-    # Fetch the latest xray version from GitHub
-    XRAY_VERSION=$(curl -s https://api.github.com/repos/XTLS/Xray-core/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-
-    if [ -z "$XRAY_VERSION" ]; then
-        echo "Failed to fetch xray version."
-        exit 1
-    fi
-
-    echo "Latest xray version: v$XRAY_VERSION"
-
-    # Determine system architecture
-    UNAME_ARCH=$(uname -m)
-    case "$UNAME_ARCH" in
-        x86_64)
-            XRAY_ARCH="amd64"
-            ;;
-        aarch64 | armv8)
-            XRAY_ARCH="arm64"
-            ;;
-        armv7l)
-            XRAY_ARCH="armv7"
-            ;;
-        *)
-            echo "Unsupported architecture: $UNAME_ARCH"
-            exit 1
-            ;;
-    esac
-
-    echo "Detected architecture: $XRAY_ARCH"
-
-    # Construct download URL
-    XRAY_DOWNLOAD_URL="https://github.com/XTLS/Xray-core/releases/download/v$XRAY_VERSION/Xray-linux-$XRAY_ARCH.zip"
-
-    # Create temporary directory
-    TEMP_DIR=$(mktemp -d)
-    pushd "$TEMP_DIR" > /dev/null
-
-    echo "Downloading xray from $XRAY_DOWNLOAD_URL"
-    wget -q "$XRAY_DOWNLOAD_URL" -O xray.zip
-
-    echo "Extracting xray..."
-    unzip -q xray.zip xray
-
-    echo "Installing xray to /usr/local/bin/"
-    sudo mv xray /usr/local/bin/
-    sudo chmod +x /usr/local/bin/xray
-
-    popd > /dev/null
-    rm -rf "$TEMP_DIR"
-
+    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
     echo "xray installation completed."
 }
 

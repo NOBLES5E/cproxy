@@ -122,6 +122,57 @@ run_cproxy_test() {
     fi
 }
 
+# Function to run cproxy test with --cgroup-path option
+run_cproxy_cgroup_path_test() {
+    echo "Running cproxy test with --cgroup-path option..."
+
+    # Define cgroup path
+    CGROUP_PATH="/test_cproxy_cgroup_path"
+
+    # Create the cgroup directory (assuming cgroup v2)
+    sudo mkdir -p /sys/fs/cgroup$CGROUP_PATH
+
+    # Define a cleanup function specific to this test
+    cleanup_cgroup_path_test() {
+        echo "Cleaning up cgroup path test..."
+        sudo cproxy_process=""
+        if [ -n "${PROXY_PID:-}" ]; then
+            sudo kill $PROXY_PID || true
+            wait $PROXY_PID 2>/dev/null || true
+            echo "cproxy process with PID $PROXY_PID terminated."
+        fi
+        sudo rmdir /sys/fs/cgroup$CGROUP_PATH || true
+        echo "Cgroup path $CGROUP_PATH removed."
+    }
+
+    # Trap to ensure cleanup happens
+    trap cleanup_cgroup_path_test EXIT
+
+    # Start cproxy with --cgroup-path
+    sudo cproxy --cgroup-path $CGROUP_PATH --port 1082 --redirect-dns &
+    PROXY_PID=$!
+    echo "cproxy started with PID $PROXY_PID for cgroup path test."
+    sleep 2  # Wait for cproxy to initialize
+
+    # Run curl within the specified cgroup
+    echo "Running curl within cgroup $CGROUP_PATH..."
+    sudo cgexec -g "unified:$CGROUP_PATH" curl -s -I https://www.google.com > /dev/null
+
+    if [ $? -eq 0 ]; then
+        echo "cproxy --cgroup-path test: SUCCESS"
+    else
+        echo "cproxy --cgroup-path test: FAILED"
+        sudo kill $PROXY_PID || true
+        exit 1
+    fi
+
+    # Cleanup
+    cleanup_cgroup_path_test
+
+    # Remove the trap
+    trap - EXIT
+}
+
 # Function to clean up in case of script exit
 cleanup() {
     echo "Cleaning up..."
@@ -144,6 +195,9 @@ main() {
     start_xray /tmp/xray_config_tproxy.json
     run_cproxy_test "tproxy"
     stop_xray
+
+    # Test with --cgroup-path option
+    run_cproxy_cgroup_path_test
 
     echo "All end-to-end tests completed successfully!"
 }

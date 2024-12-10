@@ -188,6 +188,8 @@ main() {
     create_xray_config_normal
     start_xray /tmp/xray_config_normal.json
     run_cproxy_test "normal"
+    # Test with --cgroup-path option
+    run_cproxy_cgroup_path_test
     stop_xray
 
     # Test with TPROXY
@@ -195,9 +197,6 @@ main() {
     start_xray /tmp/xray_config_tproxy.json
     run_cproxy_test "tproxy"
     stop_xray
-
-    # Test with --cgroup-path option
-    run_cproxy_cgroup_path_test
 
     echo "All end-to-end tests completed successfully!"
 }

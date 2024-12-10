@@ -61,22 +61,4 @@ jobs:
 
       - name: Run Redirect Mode Tests
         run: |
-          sudo ./test/test_redirect.sh
-
-      - name: Run TProxy Mode Tests
-        run: |
-          sudo ./test/test_tproxy.sh
-
-      - name: Run Trace Mode Tests
-        run: |
-          sudo ./test/test_trace.sh
-
-      - name: Collect Logs on Failure
-        if: failure()
-        run: |
-          tar -czf test_logs.tar.gz test/logs/
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: test-logs
-          path: test_logs.tar.gz
+          sudo ./test/run_all_tests.sh

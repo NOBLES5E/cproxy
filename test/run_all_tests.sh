@@ -20,13 +20,6 @@ install_xray() {
     echo "Xray installed at $XRAY_BIN"
 }
 
-# Function to build cproxy
-build_cproxy() {
-    echo "Building cproxy..."
-    cargo build --release
-    echo "cproxy built at $CPROXY_BIN"
-}
-
 # Function to start Xray with a specific configuration
 start_xray() {
     MODE=$1
@@ -223,7 +216,6 @@ test_proxy_mode() {
 # Main Test Execution
 main() {
     install_xray
-    build_cproxy
 
     # Test Redirect Mode
     test_proxy_mode "redirect"

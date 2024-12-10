@@ -31,7 +31,7 @@ trap cleanup EXIT
 sleep 2
 
 # Start cproxy in tproxy mode with a simple command
-./target/release/cproxy --port $PROXY_PORT --mode tproxy --redirect-dns -- echo "Test TProxy" > /dev/null &
+sudo ./target/release/cproxy --port $PROXY_PORT --mode tproxy --redirect-dns -- echo "Test TProxy" > /dev/null &
 CPROXY_PID=$!
 
 # Allow some time for cproxy to set up iptables

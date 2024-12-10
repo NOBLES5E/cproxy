@@ -7,7 +7,7 @@ LOG_FILE="${LOG_DIR}/trace.log"
 echo "Starting Trace Mode Test..." | tee "$LOG_FILE"
 
 # Start cproxy in trace mode with a simple command
-./target/release/cproxy --mode trace -- echo "Test Trace" > /dev/null &
+sudo ./target/release/cproxy --mode trace -- echo "Test Trace" > /dev/null &
 CPROXY_PID=$!
 
 # Function to clean up background processes

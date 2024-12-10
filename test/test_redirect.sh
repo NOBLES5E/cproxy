@@ -24,7 +24,7 @@ trap cleanup EXIT
 sleep 2
 
 # Start cproxy in redirect mode with a simple command
-./target/release/cproxy --port $PROXY_PORT --mode redirect --redirect-dns -- echo "Test Redirect" > /dev/null &
+sudo ./target/release/cproxy --port $PROXY_PORT --mode redirect --redirect-dns -- echo "Test Redirect" > /dev/null &
 CPROXY_PID=$!
 
 # Allow some time for cproxy to set up iptables

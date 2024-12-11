@@ -60,7 +60,7 @@ fn proxy_new_command(args: &Cli) -> Result<()> {
     let cgroup_guard = CGroupGuard::new(pid)?;
     let _guard: Box<dyn Drop> = match args.mode.as_str() {
         "redirect" => {
-            let output_chain_name = format!("cproxy_redirect_out_{}", pid);
+            let output_chain_name = format!("cp_rd_out_{}", pid);
             Box::new(RedirectGuard::new(
                 port,
                 output_chain_name.as_str(),
@@ -69,8 +69,8 @@ fn proxy_new_command(args: &Cli) -> Result<()> {
             )?)
         }
         "tproxy" => {
-            let output_chain_name = format!("cproxy_tproxy_out_{}", pid);
-            let prerouting_chain_name = format!("cproxy_tproxy_pre_{}", pid);
+            let output_chain_name = format!("cp_tp_out_{}", pid);
+            let prerouting_chain_name = format!("cp_tp_pre_{}", pid);
             let mark = pid;
             Box::new(TProxyGuard::new(
                 port,
@@ -82,8 +82,8 @@ fn proxy_new_command(args: &Cli) -> Result<()> {
             )?)
         }
         "trace" => {
-            let prerouting_chain_name = format!("cproxy_trace_pre_{}", pid);
-            let output_chain_name = format!("cproxy_trace_out_{}", pid);
+            let prerouting_chain_name = format!("cp_tr_pre_{}", pid);
+            let output_chain_name = format!("cp_tr_out_{}", pid);
             Box::new(TraceGuard::new(
                 output_chain_name.as_str(),
                 prerouting_chain_name.as_str(),
@@ -131,7 +131,7 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> Result<()> {
     let cgroup_guard = CGroupGuard::new(pid)?;
     let _guard: Box<dyn Drop> = match args.mode.as_str() {
         "redirect" => {
-            let output_chain_name = format!("cproxy_redirect_out_{}", pid);
+            let output_chain_name = format!("cp_rd_out_{}", pid);
             Box::new(RedirectGuard::new(
                 port,
                 output_chain_name.as_str(),
@@ -140,8 +140,8 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> Result<()> {
             )?)
         }
         "tproxy" => {
-            let output_chain_name = format!("cproxy_tproxy_out_{}", pid);
-            let prerouting_chain_name = format!("cproxy_tproxy_pre_{}", pid);
+            let output_chain_name = format!("cp_tp_out_{}", pid);
+            let prerouting_chain_name = format!("cp_tp_pre_{}", pid);
             let mark = pid;
             Box::new(TProxyGuard::new(
                 port,
@@ -153,8 +153,8 @@ fn proxy_existing_pid(pid: u32, args: &Cli) -> Result<()> {
             )?)
         }
         "trace" => {
-            let prerouting_chain_name = format!("cproxy_trace_pre_{}", pid);
-            let output_chain_name = format!("cproxy_trace_out_{}", pid);
+            let prerouting_chain_name = format!("cp_tr_pre_{}", pid);
+            let output_chain_name = format!("cp_tr_out_{}", pid);
             Box::new(TraceGuard::new(
                 output_chain_name.as_str(),
                 prerouting_chain_name.as_str(),
@@ -190,7 +190,7 @@ fn proxy_cgroup_paths(paths: Vec<String>, args: &Cli) -> Result<()> {
         let cgroup_guard = CGroupGuard::from_path(&path)?;
         let guard: Box<dyn Drop> = match args.mode.as_str() {
             "redirect" => {
-                let output_chain_name = format!("cproxy_redirect_out_{}", cgroup_guard.class_id);
+                let output_chain_name = format!("cp_rd_out_{}", cgroup_guard.class_id);
                 Box::new(RedirectGuard::new(
                     port,
                     output_chain_name.as_str(),
@@ -199,8 +199,8 @@ fn proxy_cgroup_paths(paths: Vec<String>, args: &Cli) -> Result<()> {
                 )?)
             }
             "tproxy" => {
-                let output_chain_name = format!("cproxy_tproxy_out_{}", cgroup_guard.class_id);
-                let prerouting_chain_name = format!("cproxy_tproxy_pre_{}", cgroup_guard.class_id);
+                let output_chain_name = format!("cp_tp_out_{}", cgroup_guard.class_id);
+                let prerouting_chain_name = format!("cp_tp_pre_{}", cgroup_guard.class_id);
                 let mark = cgroup_guard.class_id;
                 Box::new(TProxyGuard::new(
                     port,
@@ -212,8 +212,8 @@ fn proxy_cgroup_paths(paths: Vec<String>, args: &Cli) -> Result<()> {
                 )?)
             }
             "trace" => {
-                let prerouting_chain_name = format!("cproxy_trace_pre_{}", cgroup_guard.class_id);
-                let output_chain_name = format!("cproxy_trace_out_{}", cgroup_guard.class_id);
+                let prerouting_chain_name = format!("cp_tr_pre_{}", cgroup_guard.class_id);
+                let output_chain_name = format!("cp_tr_out_{}", cgroup_guard.class_id);
                 Box::new(TraceGuard::new(
                     output_chain_name.as_str(),
                     prerouting_chain_name.as_str(),

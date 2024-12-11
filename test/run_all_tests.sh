@@ -14,6 +14,19 @@ install_xray() {
     echo "xray installation completed."
 }
 
+# Function to verify proxy dependency
+verify_proxy_dependency() {
+    echo "Verifying proxy dependency..."
+
+    # Try to make a request without xray running - should fail
+    if sudo env RUST_LOG=debug cproxy --port 1082 --redirect-dns -- curl -s -I --connect-timeout 5 https://www.google.com > /dev/null 2>&1; then
+        echo "ERROR: Request succeeded without proxy running! Test failed."
+        exit 1
+    else
+        echo "Verified: Request failed without proxy as expected."
+    fi
+}
+
 # Function to create xray configuration without TPROXY
 create_xray_config_normal() {
     echo "Creating xray configuration for normal mode..."
@@ -182,6 +195,8 @@ trap cleanup EXIT
 
 # Main Execution Flow
 main() {
+    verify_proxy_dependency
+
     install_xray
 
     # Test without TPROXY

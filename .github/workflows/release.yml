@@ -12,10 +12,14 @@ jobs:
         target: [x86_64-unknown-linux-musl]
     steps:
       - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
       - name: Compile and release
         uses: Douile/rust-build.action@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUSTTARGET: ${{ matrix.target }}
           EXTRA_FILES: "README.md LICENSE"
-          TOOLCHAIN_VERSION: nigihtly

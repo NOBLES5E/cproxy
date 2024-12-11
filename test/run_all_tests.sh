@@ -156,7 +156,7 @@ run_cproxy_cgroup_path_test() {
 
     # Run curl within the specified cgroup
     echo "Running curl within cgroup $CGROUP_PATH..."
-    sudo cgexec -g "$CGROUP_NAME" curl -s -I https://www.google.com > /dev/null
+    sudo cgexec -g "*:$CGROUP_NAME" curl -s -I https://www.google.com > /dev/null
 
     if [ $? -eq 0 ]; then
         echo "cproxy --cgroup-path test: SUCCESS"

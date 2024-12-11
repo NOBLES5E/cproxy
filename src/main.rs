@@ -4,6 +4,7 @@ use crate::guards::TraceGuard;
 use eyre::Result;
 use guards::{CGroupGuard, RedirectGuard, TProxyGuard};
 use std::os::unix::prelude::CommandExt;
+use std::process::ExitStatus;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -47,7 +48,7 @@ enum ChildCommand {
     Command(Vec<String>),
 }
 
-fn proxy_new_command(args: &Cli) -> Result<()> {
+fn proxy_new_command(args: &Cli) -> Result<ExitStatus> {
     let pid = std::process::id();
     let ChildCommand::Command(child_command) = &args
         .command
@@ -120,9 +121,8 @@ fn proxy_new_command(args: &Cli) -> Result<()> {
         println!("received ctrl-c, terminating...");
     })?;
 
-    child.wait()?;
-
-    Ok(())
+    let exit_status = child.wait()?;
+    Ok(exit_status)
 }
 
 fn proxy_existing_pid(pid: u32, args: &Cli) -> Result<()> {
@@ -258,7 +258,8 @@ fn main() -> Result<()> {
     } else {
         match args.pid {
             None => {
-                proxy_new_command(&args)?;
+                let exit_status = proxy_new_command(&args)?;
+                std::process::exit(exit_status.code().unwrap_or(1));
             }
             Some(existing_pid) => {
                 proxy_existing_pid(existing_pid, &args)?;

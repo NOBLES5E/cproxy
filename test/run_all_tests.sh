@@ -127,10 +127,11 @@ run_cproxy_cgroup_path_test() {
     echo "Running cproxy test with --cgroup-path option..."
 
     # Define cgroup path
-    CGROUP_PATH="/test_cproxy_cgroup_path"
+    CGROUP_NAME="test_cproxy_cgroup_path"
+    CGROUP_PATH="/sys/fs/cgroup/$CGROUP_NAME"
 
     # Create the cgroup directory (assuming cgroup v2)
-    sudo mkdir -p /sys/fs/cgroup$CGROUP_PATH
+    sudo mkdir -p $CGROUP_PATH
 
     # Define a cleanup function specific to this test
     cleanup_cgroup_path_test() {
@@ -141,7 +142,7 @@ run_cproxy_cgroup_path_test() {
             wait $PROXY_PID 2>/dev/null || true
             echo "cproxy process with PID $PROXY_PID terminated."
         fi
-        sudo rmdir /sys/fs/cgroup$CGROUP_PATH || true
+        sudo rmdir $CGROUP_PATH || true
         echo "Cgroup path $CGROUP_PATH removed."
     }
 
@@ -156,7 +157,7 @@ run_cproxy_cgroup_path_test() {
 
     # Run curl within the specified cgroup
     echo "Running curl within cgroup $CGROUP_PATH..."
-    sudo cgexec -g "unified:$CGROUP_PATH" curl -s -I https://www.google.com > /dev/null
+    sudo cgexec -g "unified:$CGROUP_NAME" curl -s -I https://www.google.com > /dev/null
 
     if [ $? -eq 0 ]; then
         echo "cproxy --cgroup-path test: SUCCESS"

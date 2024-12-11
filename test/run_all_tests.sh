@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-export RUST_LOG=debug
-
 # Variables
 TEMP_DIR=""
 XRAY_PID=""
@@ -114,7 +112,7 @@ run_cproxy_test() {
 
     # Example command to test proxying using curl
     echo "Executing curl through cproxy..."
-    sudo cproxy $CPROXY_MODE --port 1082 --redirect-dns -- curl -s -I https://www.google.com > /dev/null
+    sudo env RUST_LOG=debug cproxy $CPROXY_MODE --port 1082 --redirect-dns -- curl -s -I https://www.google.com > /dev/null
 
     if [ $? -eq 0 ]; then
         echo "cproxy test in mode '$MODE': SUCCESS"
@@ -152,7 +150,7 @@ run_cproxy_cgroup_path_test() {
     trap cleanup_cgroup_path_test EXIT
 
     # Start cproxy with --cgroup-path
-    sudo cproxy --cgroup-path $CGROUP_PATH --port 1082 --redirect-dns &
+    sudo env RUST_LOG=debug cproxy --cgroup-path $CGROUP_PATH --port 1082 --redirect-dns &
     PROXY_PID=$!
     echo "cproxy started with PID $PROXY_PID for cgroup path test."
     sleep 2  # Wait for cproxy to initialize

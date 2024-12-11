@@ -136,7 +136,6 @@ run_cproxy_cgroup_path_test() {
     # Define a cleanup function specific to this test
     cleanup_cgroup_path_test() {
         echo "Cleaning up cgroup path test..."
-        sudo cproxy_process=""
         if [ -n "${PROXY_PID:-}" ]; then
             sudo kill $PROXY_PID || true
             wait $PROXY_PID 2>/dev/null || true

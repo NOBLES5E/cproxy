@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+export RUST_LOG=debug
+
 # Variables
 TEMP_DIR=""
 XRAY_PID=""

@@ -1,10 +1,9 @@
 on: [push, pull_request]
 
-name: CI
+name: check and test
 
 jobs:
-  check:
-    name: Check
+  cargo-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -17,8 +16,7 @@ jobs:
         with:
           command: check
 
-  test:
-    name: Test Suite
+  cargo-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -30,3 +28,38 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+
+  e2e-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iptables iproute2 socat curl dnsutils cgroup-tools
+
+      - name: Build cproxy
+        run: |
+          cargo build --release
+
+      - name: Prepare Test Environment
+        run: |
+          mkdir -p test/logs
+          chmod +x test/*.sh
+          sudo install -m 755 target/release/cproxy /usr/local/bin
+
+      - name: Run Redirect Mode Tests
+        run: |
+          sudo ./test/run_all_tests.sh

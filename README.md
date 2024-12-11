@@ -102,6 +102,18 @@ sudo cproxy --mode trace <your-program>
 
 You will be able to see log in `dmesg`. Note that this requires a recent enough kernel and iptables.
 
+### Advanced Usage: Proxy Specific Cgroup Paths
+
+`cproxy` allows you to proxy all processes within specific cgroup paths. This is particularly useful for managing groups of related processes without specifying individual PIDs.
+
+Suppose you have a cgroup at `/sys/fs/cgroup/mygroup` containing several processes you wish to proxy. You can run:
+
+```bash
+sudo cproxy --port 1080 --cgroup-path /sys/fs/cgroup/mygroup --mode tproxy
+```
+
+This command will proxy all TCP and UDP traffic from processes within the `/sys/fs/cgroup/mygroup` cgroup using TPROXY mode on port `1080`.
+
 ## The Secret Sauce
 
 `cproxy` simply creates a unique `cgroup` for the proxied program, and redirect its traffic with packet rules.

@@ -136,9 +136,9 @@ dependencies = [
 
 [[package]]
 name = "cmd_lib"
-version = "1.9.5"
+version = "1.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "371c15a3c178d0117091bd84414545309ca979555b1aad573ef591ad58818d41"
+checksum = "1af0f9b65935ff457da75535a6b6ff117ac858f03f71191188b3b696f90aec5a"
 dependencies = [
  "cmd_lib_macros",
  "env_logger",
@@ -150,9 +150,9 @@ dependencies = [
 
 [[package]]
 name = "cmd_lib_macros"
-version = "1.9.5"
+version = "1.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb844bd05be34d91eb67101329aeba9d3337094c04fd8507d821db7ebb488eaf"
+checksum = "1e69eee115667ccda8b9ed7010bcf13356ad45269fc92aa78534890b42809a64"
 dependencies = [
  "proc-macro-error2",
  "proc-macro2",
